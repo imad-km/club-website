@@ -223,17 +223,6 @@ if (isset($_GET['msg'])) {
 .proj-img-ph small{font-size:.7rem;color:var(--muted);}
 .proj-img-clear{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;z-index:2;transition:.15s;}
 .proj-img-clear:hover{background:rgba(180,0,0,.8);}
-/* MY EVENTS STYLES */
-.my-events-title{font-family:'Fraunces',serif;font-weight:800;font-size:1rem;color:var(--dark);}
-.my-event-item{display:flex;align-items:center;gap:14px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:.2s;}
-.my-event-item:hover{border-color:var(--green-m);box-shadow:var(--shadow-md);}
-.my-event-date{width:48px;height:48px;border-radius:10px;background:var(--green-p);border:1.5px solid var(--green-m);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
-.my-event-day{font-family:'Fraunces',serif;font-weight:900;font-size:1.1rem;color:var(--green);line-height:1;}
-.my-event-month{font-size:.6rem;font-weight:700;color:var(--green);text-transform:uppercase;}
-.my-event-info{flex:1;}
-.my-event-name{font-size:.88rem;font-weight:700;color:var(--dark);margin-bottom:4px;}
-.my-event-loc{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
-.my-event-type{font-size:.68rem;font-weight:700;padding:4px 10px;border-radius:10px;flex-shrink:0;}
 /* UNI POST styles */
 .uni-post-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .uni-post-badge{font-size:.68rem;font-weight:700;color:var(--green);background:var(--green-p);padding:3px 8px;border-radius:10px;display:flex;align-items:center;gap:4px;}
@@ -309,10 +298,6 @@ if (isset($_GET['msg'])) {
         <i class="fa-solid fa-calendar-days"></i> Événements
         <span class="feed-tab-count" id="tab-count-events"><?= count($events_data) ?></span>
       </button>
-      <button class="feed-tab" onclick="switchTab('myevents',this)">
-        <i class="fa-solid fa-ticket"></i> Mes événements
-        <span class="feed-tab-count" id="tab-count-myevents">0</span>
-      </button>
       <button class="feed-tab" onclick="switchTab('university',this)">
         <i class="fa-solid fa-university"></i> Université
       </button>
@@ -355,15 +340,6 @@ if (isset($_GET['msg'])) {
       <div class="empty-state" id="events-empty" style="display:none">
         <div class="es-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
         <div class="es-title">Aucun événement</div>
-      </div>
-    </div>
-
-    <!-- TAB: MY EVENTS -->
-    <div class="tab-panel" id="panel-myevents">
-      <div id="myevents-container"></div>
-      <div class="empty-state" id="myevents-empty" style="display:none">
-        <div class="es-icon"><i class="fa-solid fa-ticket"></i></div>
-        <div class="es-title">Vous n'êtes inscrit à aucun événement</div>
       </div>
     </div>
 
@@ -601,7 +577,6 @@ function switchTab(tab,btn){
   document.getElementById('panel-'+tab).classList.add('active');
   if(tab==='announcements')renderAnnouncements();
   if(tab==='events')renderEvents();
-  if(tab==='myevents')renderMyEvents();
   if(tab==='university')loadUniversityInfo();
 }
 
@@ -841,13 +816,6 @@ function buildEventCard(e,delay){
   const btnHtml=e.is_full&&!joined?`<button class="event-join-btn" disabled>Complet</button>`:joined?`<button class="event-join-btn joined-btn" onclick="_post({_action:'leave_event',id:${e.id}})"><i class="fa-solid fa-check"></i> Inscrit</button>`:`<button class="event-join-btn" onclick="_post({_action:'join_event',id:${e.id}})">S'inscrire</button>`;
   return`<div class="event-card${joined?' joined':''}" style="animation-delay:${delay}ms"><div class="event-img-wrap">${imgContent}<span class="event-type-badge ${typeCss}"><i class="fa-solid ${typeIcon}" style="margin-right:4px"></i>${typeLabel}</span><span class="event-joined-badge"><i class="fa-solid fa-check"></i> Inscrit</span></div><div class="event-body"><div class="event-title">${e.title}</div><div class="event-meta"><div class="event-meta-row"><i class="fa-solid fa-calendar"></i>${dateStr}</div><div class="event-meta-row"><i class="fa-regular fa-clock"></i>${timeStr}</div><div class="event-meta-row"><i class="fa-solid fa-location-dot"></i>${e.location||'—'}</div></div><div class="event-desc">${e.description||''}</div></div><div class="event-footer"><div class="event-capacity"><div class="event-cap-bar"><div class="event-cap-fill ${capClass}" style="width:${Math.min(capPct,100)}%"></div></div><span>${e.registered_count}${e.capacity?'/'+e.capacity:''} inscrits</span></div>${btnHtml}</div></div>`;
 }
-function renderMyEvents(){
-  const cont=document.getElementById('myevents-container'),empty=document.getElementById('myevents-empty');
-  const myList=EVENTS.filter(e=>joinedEventIds.has(e.id));
-  if(!myList.length){empty.style.display='block';cont.innerHTML='';return;}
-  empty.style.display='none';
-  cont.innerHTML=myList.map(e=>{const d=new Date(e.start_at);const typeCss=EVENT_TYPE_CSS[e.event_type]||'etype-other';const typeLabel=EVENT_TYPE_LABELS[e.event_type]||'Événement';return`<div class="my-event-item"><div class="my-event-date"><div class="my-event-day">${d.getDate()}</div><div class="my-event-month">${d.toLocaleDateString('fr-FR',{month:'short'})}</div></div><div class="my-event-info"><div class="my-event-name">${e.title}</div><div class="my-event-loc"><i class="fa-solid fa-location-dot"></i>${e.location||'—'}</div></div><span class="my-event-type ${typeCss}">${typeLabel}</span></div>`;}).join('');
-}
 function renderSidebarEvents(){
   const el=document.getElementById('sidebar-events');
   const upcoming=EVENTS.filter(e=>!e.is_full).slice(0,3);
@@ -957,7 +925,7 @@ function storyNext(){clearTimeout(storyTimer);if(storyCurrent<storyItems.length-
 function storyPrev(){clearTimeout(storyTimer);if(storyCurrent>0){storyCurrent--;renderStory(storyCurrent);startStoryTimer();}}
 
 // ─── MOBILE TABS ───
-function mobileTab(tab,btn){document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');currentTab=tab;if(tab==='events')renderEvents();if(tab==='myevents')renderMyEvents();if(tab==='announcements')renderAnnouncements();if(tab==='university')loadUniversityInfo();window.scrollTo({top:0,behavior:'smooth'});}
+function mobileTab(tab,btn){document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');currentTab=tab;if(tab==='events')renderEvents();if(tab==='announcements')renderAnnouncements();if(tab==='university')loadUniversityInfo();window.scrollTo({top:0,behavior:'smooth'});}
 
 // ─── INIT ───
 window.addEventListener('DOMContentLoaded', () => {
