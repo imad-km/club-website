@@ -12,7 +12,7 @@ $email = '';
 
 // ── Role: student (can extend to professor later) ───────────────────────────
 $role     = 'student';
-$api_base = 'http://127.0.0.1:5000/api/v1';
+$api_base = 'http://173.249.28.246:8090/api/v1';
 
 function api_call(string $path, array $payload): array {
     global $api_base;

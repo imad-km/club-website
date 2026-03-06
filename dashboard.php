@@ -3,11 +3,75 @@ require_once 'includes/config.php';
 require_once 'includes/api_helper.php';
 session_start();
 
+// ── helper: make DELETE/POST curl call to Flask API ──
+function api_delete(string $path): array {
+    $token = $_SESSION['access'] ?? '';
+    $ch = curl_init('http://173.249.28.246:8090/api/v1'.$path);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>'DELETE',CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.$token],CURLOPT_TIMEOUT=>15]);
+    $body = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+    return ['code'=>$code, 'data'=>json_decode($body,true)??[]];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
-    if (!$pl) { header('Location: dashboard.php?err=invalid'); exit(); }
+    if (!$pl) {
+        // Check if AJAX
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) { header('Content-Type: application/json'); echo json_encode(['error'=>'invalid']); exit(); }
+        header('Location: dashboard.php?err=invalid'); exit();
+    }
     $action = $pl['_action'] ?? '';
-    if ($action === 'join_project') {
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']);
+
+    // ── AJAX-only actions (return JSON) ──
+    if ($action === 'toggle_like') {
+        $r = api_post('/projects/'.(int)($pl['id']??0).'/like', []);
+        header('Content-Type: application/json');
+        echo json_encode(['liked'=>$r['data']['liked']??false,'like_count'=>$r['data']['like_count']??0,'error'=>$r['data']['error']??null]);
+        exit();
+    } elseif ($action === 'add_comment') {
+        $r = api_post('/projects/'.(int)($pl['id']??0).'/comments', ['content'=>$pl['content']??'']);
+        header('Content-Type: application/json');
+        echo json_encode(['comment'=>$r['data']['comment']??null,'error'=>$r['data']['error']??null]);
+        exit();
+    } elseif ($action === 'delete_comment') {
+        $r = api_delete('/projects/'.(int)($pl['project_id']??0).'/comments/'.(int)($pl['comment_id']??0));
+        header('Content-Type: application/json');
+        echo json_encode(['ok'=>($r['code']===200||$r['code']===204),'error'=>$r['data']['error']??null]);
+        exit();
+    } elseif ($action === 'toggle_follow') {
+        $r = api_post('/users/'.(int)($pl['id']??0).'/follow', []);
+        header('Content-Type: application/json');
+        echo json_encode(['following'=>$r['data']['following']??false,'followers_count'=>$r['data']['followers_count']??0,'error'=>$r['data']['error']??null]);
+        exit();
+    } elseif ($action === 'load_comments') {
+        $r = api_get('/projects/'.(int)($pl['id']??0).'/comments');
+        header('Content-Type: application/json');
+        echo json_encode($r['data']);
+        exit();
+
+    } elseif ($action === 'search') {
+        $r = api_post('/search', ['name'=>$pl['name']??'']);
+        header('Content-Type: application/json');
+        echo json_encode($r['data']);
+        exit();
+    } elseif ($action === 'get_user_info') {
+        $r = api_post('/info', ['id'=>(int)($pl['id']??0)]);
+        header('Content-Type: application/json');
+        echo json_encode($r['data']);
+        exit();
+    } elseif ($action === 'get_uni_posts') {
+        $r = api_get('/getinfo');
+        header('Content-Type: application/json');
+        echo json_encode($r['data']);
+        exit();
+    } elseif ($action === 'get_uni_post') {
+        $r = api_get('/getsuperinfo/'.(int)($pl['id']??0));
+        header('Content-Type: application/json');
+        echo json_encode($r['data']);
+        exit();
+
+    // ── Normal form actions (redirect) ──
+    } elseif ($action === 'join_project') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/join', []);
         header('Location: dashboard.php?msg='.($r['code']===201 ? 'project_joined' : 'err_'.urlencode($r['data']['error']??'error')));
     } elseif ($action === 'create_project') {
@@ -20,11 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $r = api_post('/events/'.(int)($pl['id']??0).'/join', []);
         header('Location: dashboard.php?msg='.($r['code']===201 ? 'event_joined' : 'err_'.urlencode($r['data']['error']??'error')));
     } elseif ($action === 'leave_event') {
-        $token = $_SESSION['access'] ?? '';
-        $ch = curl_init('http://127.0.0.1:5000/api/v1/events/'.(int)($pl['id']??0).'/quit');
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>'DELETE',CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.$token],CURLOPT_TIMEOUT=>15]);
-        $body = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
-        header('Location: dashboard.php?msg='.($code===200||$code===204 ? 'event_left' : 'err_left'));
+        $r = api_delete('/events/'.(int)($pl['id']??0).'/quit');
+        header('Location: dashboard.php?msg='.($r['code']===200||$r['code']===204 ? 'event_left' : 'err_left'));
     } else {
         header('Location: dashboard.php?err=unknown');
     }
@@ -592,7 +653,7 @@ function buildProjectCard(p,delay){
     ${imgSection}
     <div class="lk-stats-bar">
       <span class="lk-stat-item"><i class="fa-solid fa-heart" style="color:var(--orange)"></i> <span class="lk-like-count">${likeCount}</span></span>
-      <span class="lk-stat-item"><i class="fa-regular fa-comment" style="color:var(--muted)"></i> <span class="lk-cmt-count">${commentCount}</span></span>
+      <span class="lk-stat-item" style="cursor:pointer" onclick="toggleComments(this.closest('.lk-card').querySelector('.lk-action-btn:last-child'),${p.id})"><i class="fa-regular fa-comment" style="color:var(--muted)"></i> <span class="lk-cmt-count">${commentCount}</span></span>
     </div>
     <div class="lk-divider"></div>
     <div class="lk-actions">
@@ -623,15 +684,21 @@ PROJECTS.forEach(p => {
   p._like_count = p.like_count ?? 0;
 });
 
+// ─── SECURE AJAX via PHP proxy ───
+async function _postAjax(payload){
+  const fd=new FormData();
+  fd.append('_imadenc',_aes(payload));
+  fd.append('_dok',_aes({t:Date.now()}));
+  const r=await fetch('dashboard.php',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
+  return r.json();
+}
+
 // ─── LIKE ───
 async function toggleLike(btn, projectId){
   btn.disabled = true;
   try {
-    const r = await fetch(`http://127.0.0.1:5000/api/v1/projects/${projectId}/like`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN}
-    });
-    const data = await r.json();
+    const data = await _postAjax({_action:'toggle_like', id:projectId});
+    if(data.error){showToast(data.error);return;}
     const liked = data.liked;
     const count = data.like_count ?? 0;
     btn.classList.toggle('lk-liked', liked);
@@ -655,22 +722,23 @@ async function toggleComments(btn,projectId){
   if(!open&&!_loadedComments[projectId]) await loadComments(projectId);
 }
 async function loadComments(projectId){
-  _loadedComments[projectId]=true;
   const list=document.getElementById('cmt-list-'+projectId);
+  list.innerHTML=`<div class="lk-cmt-loading"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
   try{
-    const r=await fetch(`http://127.0.0.1:5000/api/v1/projects/${projectId}/comments`,{headers:{'Authorization':'Bearer '+ACCESS_TOKEN}});
-    const data=await r.json();
+    const data=await _postAjax({_action:'load_comments',id:projectId});
+    _loadedComments[projectId]=true;
     const comments=data.comments||[];
     if(!comments.length){list.innerHTML=`<div class="lk-cmt-empty">Aucun commentaire. Soyez le premier !</div>`;return;}
-    list.innerHTML=comments.map(c=>{
-      const cav=c.author?.image?`<img src="${c.author.image}" alt="">`:getInitials(c.author?.firstname||'?',c.author?.lastname||'');
-      const isMe=c.author?.id===ME.id;
-      return`<div class="lk-cmt-item" id="cmt-${c.id}">
+    list.innerHTML=comments.map(cm=>{
+      const au=cm.user||cm.author||{};
+      const cav=au.image?`<img src="${au.image}" alt="">`:getInitials(au.firstname||'?',au.lastname||'');
+      const isMe=au.id===ME.id;
+      return`<div class="lk-cmt-item" id="cmt-${cm.id}">
         <div class="lk-cmt-av">${cav}</div>
         <div class="lk-cmt-bubble">
-          <div class="lk-cmt-author">${c.author?.firstname||''} ${c.author?.lastname||''}</div>
-          <div class="lk-cmt-text">${c.content}</div>
-          <div class="lk-cmt-meta">${timeAgo(c.created_at)}${isMe?` · <span class="lk-cmt-del" onclick="deleteComment(${projectId},${c.id})">Supprimer</span>`:''}</div>
+          <div class="lk-cmt-author">${au.firstname||''} ${au.lastname||''}</div>
+          <div class="lk-cmt-text">${cm.content}</div>
+          <div class="lk-cmt-meta">${timeAgo(cm.created_at)}${isMe?` · <span class="lk-cmt-del" onclick="deleteComment(${projectId},${cm.id})">Supprimer</span>`:''}</div>
         </div>
       </div>`;
     }).join('');
@@ -682,18 +750,17 @@ async function submitComment(projectId){
   if(!text) return;
   input.value='';
   try{
-    const r=await fetch(`http://127.0.0.1:5000/api/v1/projects/${projectId}/comments`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN},body:JSON.stringify({content:text})});
-    const data=await r.json();
-    const c=data.comment;
-    if(!c) return;
+    const data=await _postAjax({_action:'add_comment',id:projectId,content:text});
+    if(data.error){showToast(data.error);return;}
+    const cm=data.comment;
+    if(!cm) return;
     const list=document.getElementById('cmt-list-'+projectId);
     const cav=ME.image?`<img src="${ME.image}" alt="">`:getInitials(ME.firstname,ME.lastname);
     const newEl=document.createElement('div');
-    newEl.className='lk-cmt-item';newEl.id='cmt-'+c.id;
-    newEl.innerHTML=`<div class="lk-cmt-av">${cav}</div><div class="lk-cmt-bubble"><div class="lk-cmt-author">${ME.firstname} ${ME.lastname}</div><div class="lk-cmt-text">${c.content}</div><div class="lk-cmt-meta">À l'instant · <span class="lk-cmt-del" onclick="deleteComment(${projectId},${c.id})">Supprimer</span></div></div>`;
+    newEl.className='lk-cmt-item';newEl.id='cmt-'+cm.id;
+    newEl.innerHTML=`<div class="lk-cmt-av">${cav}</div><div class="lk-cmt-bubble"><div class="lk-cmt-author">${ME.firstname} ${ME.lastname}</div><div class="lk-cmt-text">${cm.content}</div><div class="lk-cmt-meta">À l'instant · <span class="lk-cmt-del" onclick="deleteComment(${projectId},${cm.id})">Supprimer</span></div></div>`;
     list.querySelector('.lk-cmt-empty')?.remove();
     list.appendChild(newEl);
-    // update count
     const card=document.querySelector(`.lk-card[data-project-id="${projectId}"]`);
     if(card){const el=card.querySelector('.lk-cmt-count');if(el)el.textContent=parseInt(el.textContent||0)+1;}
     const p=PROJECTS.find(x=>x.id===projectId);
@@ -703,11 +770,13 @@ async function submitComment(projectId){
 async function deleteComment(projectId,commentId){
   if(!confirm('Supprimer ce commentaire ?')) return;
   try{
-    const r=await fetch(`http://127.0.0.1:5000/api/v1/projects/${projectId}/comments/${commentId}`,{method:'DELETE',headers:{'Authorization':'Bearer '+ACCESS_TOKEN}});
-    if(r.status===200||r.status===204){
+    const data=await _postAjax({_action:'delete_comment',project_id:projectId,comment_id:commentId});
+    if(data.ok){
       document.getElementById('cmt-'+commentId)?.remove();
       const card=document.querySelector(`.lk-card[data-project-id="${projectId}"]`);
       if(card){const el=card.querySelector('.lk-cmt-count');if(el)el.textContent=Math.max(0,parseInt(el.textContent||0)-1);}
+    } else {
+      showToast(data.error||'Erreur suppression');
     }
   }catch(e){showToast('Erreur réseau');}
 }
@@ -715,8 +784,8 @@ async function deleteComment(projectId,commentId){
 // ─── FOLLOW (from dashboard modal) ───
 async function toggleFollow(userId,btn){
   try{
-    const r=await fetch(`http://127.0.0.1:5000/api/v1/users/${userId}/follow`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN}});
-    const data=await r.json();
+    const data=await _postAjax({_action:'toggle_follow',id:userId});
+    if(data.error){showToast(data.error);return;}
     const following=data.following;
     btn.classList.toggle('sp-following',following);
     btn.innerHTML=following?`<i class="fa-solid fa-user-check"></i> Abonné`:`<i class="fa-solid fa-user-plus"></i> Suivre`;
@@ -789,7 +858,7 @@ function renderSidebarEvents(){
 // ─── SEARCH ───
 let searchTimer=null,currentSearch='';
 function handleSearch(val){currentSearch=val.trim();document.getElementById('search-clear').style.display=currentSearch?'block':'none';if(!currentSearch){closeDropdown();return;}document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>Recherche…</div>`;document.getElementById('search-dropdown').classList.add('open');clearTimeout(searchTimer);searchTimer=setTimeout(()=>doSearch(currentSearch),350);}
-async function doSearch(q){try{const r=await fetch('http://127.0.0.1:5000/api/v1/search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN},body:JSON.stringify({name:q})});const data=await r.json();const dd=document.getElementById('search-dropdown');if(!currentSearch)return;const results=data.results||[];if(!results.length){dd.innerHTML=`<div class="sd-empty">Aucun étudiant trouvé pour "<strong>${q}</strong>"</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);dd.innerHTML=`<div class="sd-section"><div class="sd-label">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onmousedown="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty">Erreur de connexion</div>`;}}
+async function doSearch(q){try{const data=await _postAjax({_action:'search',name:q});const dd=document.getElementById('search-dropdown');if(!currentSearch)return;const results=data.results||[];if(!results.length){dd.innerHTML=`<div class="sd-empty">Aucun étudiant trouvé pour "<strong>${q}</strong>"</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);dd.innerHTML=`<div class="sd-section"><div class="sd-label">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onmousedown="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty">Erreur de connexion</div>`;}}
 function openDropdown(){if(currentSearch)document.getElementById('search-dropdown').classList.add('open');}
 function closeDropdown(){document.getElementById('search-dropdown').classList.remove('open');}
 function closeDropdownDelayed(){setTimeout(closeDropdown,200);}
@@ -799,7 +868,7 @@ function clearSearch(){document.getElementById('student-search').value='';curren
 function openMobileSearch(){document.getElementById('mob-search-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>document.getElementById('mob-search-input').focus(),100);}
 function closeMobileSearch(){document.getElementById('mob-search-overlay').classList.remove('open');document.getElementById('mob-search-input').value='';document.getElementById('mob-search-results').innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;document.body.style.overflow='';}
 let mobTimer=null;
-function handleMobSearch(val){const q=val.trim();const res=document.getElementById('mob-search-results');if(!q){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;return;}res.innerHTML=`<div class="sd-empty" style="padding:40px 20px"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i>Recherche…</div>`;clearTimeout(mobTimer);mobTimer=setTimeout(async()=>{try{const r=await fetch('http://127.0.0.1:5000/api/v1/search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN},body:JSON.stringify({name:q})});const data=await r.json();const results=data.results||[];if(!results.length){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Aucun étudiant trouvé</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);res.innerHTML=`<div class="sd-section"><div class="sd-label" style="padding:12px 16px 6px">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onclick="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div style="flex:1"><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Erreur de connexion</div>`;}},350);}
+function handleMobSearch(val){const q=val.trim();const res=document.getElementById('mob-search-results');if(!q){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;return;}res.innerHTML=`<div class="sd-empty" style="padding:40px 20px"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i>Recherche…</div>`;clearTimeout(mobTimer);mobTimer=setTimeout(async()=>{try{const data=await _postAjax({_action:'search',name:q});const results=data.results||[];if(!results.length){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Aucun étudiant trouvé</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);res.innerHTML=`<div class="sd-section"><div class="sd-label" style="padding:12px 16px 6px">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onclick="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div style="flex:1"><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Erreur de connexion</div>`;}},350);}
 
 // ─── CREATE PROJECT ───
 function openCreateProject(){document.getElementById('create-project-modal').classList.add('open');document.body.style.overflow='hidden';}
@@ -859,7 +928,7 @@ function submitCreateProject(){
 }
 
 // ─── STUDENT PROFILE MODAL ───
-async function openStudentProfile(id){document.getElementById('sp-modal').classList.add('open');document.body.style.overflow='hidden';document.getElementById('sp-loading').style.display='flex';document.getElementById('sp-content').innerHTML='';try{const r=await fetch('http://127.0.0.1:5000/api/v1/info',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN},body:JSON.stringify({id})});const data=await r.json();document.getElementById('sp-loading').style.display='none';renderStudentProfile(data);}catch(e){document.getElementById('sp-loading').style.display='none';document.getElementById('sp-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
+async function openStudentProfile(id){document.getElementById('sp-modal').classList.add('open');document.body.style.overflow='hidden';document.getElementById('sp-loading').style.display='flex';document.getElementById('sp-content').innerHTML='';try{const data=await _postAjax({_action:'get_user_info',id});document.getElementById('sp-loading').style.display='none';renderStudentProfile(data);}catch(e){document.getElementById('sp-loading').style.display='none';document.getElementById('sp-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 function closeStudentProfile(){document.getElementById('sp-modal').classList.remove('open');document.body.style.overflow='';}
 const GRADE_LABELS={licence:'Licence',master:'Master',doctorat:'Doctorat'};
 const DOMAIN_LABELS={'intelligence artificielle':'Intelligence Artificielle','developpement web':'Développement Web','cyber securite':'Cyber Sécurité','reseaux et telecommunications':'Réseaux & Télécoms','systemes embarques':'Systèmes Embarqués','science des donnees':'Science des Données','genie logiciel':'Génie Logiciel','autre':'Autre'};
@@ -867,7 +936,7 @@ function renderStudentProfile(data){const u=data.user||{};const projects=data.pr
 
 // ─── UNIVERSITY ───
 let uniLoaded=false,uniPosts=[];
-async function loadUniversityInfo(){if(uniLoaded)return;document.getElementById('uni-loading').style.display='block';document.getElementById('uni-posts-list').innerHTML='';try{const r=await fetch('http://127.0.0.1:5000/api/v1/getinfo',{headers:{'Authorization':'Bearer '+ACCESS_TOKEN}});const data=await r.json();uniLoaded=true;uniPosts=data.posts||[];document.getElementById('uni-loading').style.display='none';if(!uniPosts.length){document.getElementById('uni-posts-list').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-university"></i></div><div class="es-title">Aucune actualité</div></div>`;return;}document.getElementById('uni-posts-list').innerHTML=uniPosts.map((p,i)=>{
+async function loadUniversityInfo(){if(uniLoaded)return;document.getElementById('uni-loading').style.display='block';document.getElementById('uni-posts-list').innerHTML='';try{const data=await _postAjax({_action:'get_uni_posts'});uniLoaded=true;uniPosts=data.posts||[];document.getElementById('uni-loading').style.display='none';if(!uniPosts.length){document.getElementById('uni-posts-list').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-university"></i></div><div class="es-title">Aucune actualité</div></div>`;return;}document.getElementById('uni-posts-list').innerHTML=uniPosts.map((p,i)=>{
   const imgHtml=p.image
     ?`<img class="uni-post-img" src="${p.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="uni-post-img-ph" style="display:none"><i class="fa-solid fa-newspaper"></i></div>`
     :`<div class="uni-post-img-ph"><i class="fa-solid fa-newspaper"></i></div>`;
@@ -875,7 +944,7 @@ async function loadUniversityInfo(){if(uniLoaded)return;document.getElementById(
 }).join('');}catch(e){document.getElementById('uni-loading').style.display='none';document.getElementById('uni-posts-list').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 
 // ─── DRAWER ───
-async function openPostDrawer(id,title){document.getElementById('drawer-title').textContent='Actualité';document.getElementById('drawer-content').style.display='none';document.getElementById('drawer-loading').style.display='flex';document.getElementById('drawer-overlay').classList.add('open');document.getElementById('post-drawer').classList.add('open');document.body.style.overflow='hidden';try{const r=await fetch('http://127.0.0.1:5000/api/v1/getsuperinfo/'+id,{headers:{'Authorization':'Bearer '+ACCESS_TOKEN}});const data=await r.json();document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';let html='';if(data.text)html+=`<div class="drawer-text">${data.text}</div>`;if(data.images?.length){html+=`<div class="drawer-imgs-title"><i class="fa-solid fa-images" style="color:var(--green)"></i> Photos (${data.images.length})</div><div class="drawer-img-grid">`;data.images.forEach(src=>{html+=`<img src="${src}" alt="" loading="lazy" onclick="window.open('${src}','_blank')" onerror="this.style.display='none'">`});html+=`</div>`;}if(data.pdf?.length){data.pdf.forEach((url,i)=>{const name=url.split('/').pop()||`document-${i+1}.pdf`;html+=`<div class="drawer-pdf-viewer"><div class="drawer-pdf-viewer-header"><div style="display:flex;align-items:center;gap:8px"><div class="drawer-pdf-icon"><i class="fa-solid fa-file-pdf"></i></div><div style="font-size:.82rem;font-weight:700;color:var(--text)">${name}</div></div><a href="${url}" target="_blank" rel="noopener" class="drawer-pdf-open-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a></div><iframe src="${url}" class="drawer-pdf-iframe" title="${name}"></iframe></div>`;});}if(!data.text&&!data.images?.length&&!data.pdf?.length)html=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-file-circle-question"></i></div><div class="es-title">Contenu indisponible</div></div>`;document.getElementById('drawer-content').innerHTML=html;}catch(e){document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';document.getElementById('drawer-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
+async function openPostDrawer(id,title){document.getElementById('drawer-title').textContent='Actualité';document.getElementById('drawer-content').style.display='none';document.getElementById('drawer-loading').style.display='flex';document.getElementById('drawer-overlay').classList.add('open');document.getElementById('post-drawer').classList.add('open');document.body.style.overflow='hidden';try{const data=await _postAjax({_action:'get_uni_post',id});document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';let html='';if(data.text)html+=`<div class="drawer-text">${data.text}</div>`;if(data.images?.length){html+=`<div class="drawer-imgs-title"><i class="fa-solid fa-images" style="color:var(--green)"></i> Photos (${data.images.length})</div><div class="drawer-img-grid">`;data.images.forEach(src=>{html+=`<img src="${src}" alt="" loading="lazy" onclick="window.open('${src}','_blank')" onerror="this.style.display='none'">`});html+=`</div>`;}if(data.pdf?.length){data.pdf.forEach((url,i)=>{const name=url.split('/').pop()||`document-${i+1}.pdf`;html+=`<div class="drawer-pdf-viewer"><div class="drawer-pdf-viewer-header"><div style="display:flex;align-items:center;gap:8px"><div class="drawer-pdf-icon"><i class="fa-solid fa-file-pdf"></i></div><div style="font-size:.82rem;font-weight:700;color:var(--text)">${name}</div></div><a href="${url}" target="_blank" rel="noopener" class="drawer-pdf-open-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a></div><iframe src="${url}" class="drawer-pdf-iframe" title="${name}"></iframe></div>`;});}if(!data.text&&!data.images?.length&&!data.pdf?.length)html=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-file-circle-question"></i></div><div class="es-title">Contenu indisponible</div></div>`;document.getElementById('drawer-content').innerHTML=html;}catch(e){document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';document.getElementById('drawer-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('post-drawer').classList.remove('open');document.body.style.overflow='';}
 
 // ─── STORY VIEWER ───

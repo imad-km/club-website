@@ -10,19 +10,75 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
 $err = '';
 $success = '';
 
+function prof_api_post(string $path, array $data): array {
+    $token = $_SESSION['access'] ?? '';
+    $ch = curl_init('http://173.249.28.246:8090/api/v1'.$path);
+    curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.$token],CURLOPT_POSTFIELDS=>json_encode($data),CURLOPT_TIMEOUT=>15]);
+    $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+    return['code'=>$code,'data'=>json_decode($body,true)??[]];
+}
+function prof_api_delete(string $path): array {
+    $token = $_SESSION['access'] ?? '';
+    $ch = curl_init('http://173.249.28.246:8090/api/v1'.$path);
+    curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>'DELETE',CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.$token],CURLOPT_TIMEOUT=>15]);
+    $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+    return['code'=>$code,'data'=>json_decode($body,true)??[]];
+}
+function prof_api_get(string $path): array {
+    $token = $_SESSION['access'] ?? '';
+    $ch = curl_init('http://173.249.28.246:8090/api/v1'.$path);
+    curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token],CURLOPT_TIMEOUT=>15]);
+    $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+    return['code'=>$code,'data'=>json_decode($body,true)??[]];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
-    if (!$pl) { $err = 'Requête invalide.'; }
-    else {
-        $payload = [];
-        foreach (['firstname','lastname','email','phone','grade','domain','image','password'] as $f)
-            if (isset($pl[$f]) && $pl[$f] !== '') $payload[$f] = $pl[$f];
-        $ch = curl_init('http://127.0.0.1:5000/api/v1/me');
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>'PUT',CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.($_SESSION['access']??'')],CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_TIMEOUT=>15]);
-        $body = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
-        $r = json_decode($body, true) ?? [];
-        if ($code === 200) { header('Location: profile.php?saved=1'); exit(); }
-        $err = $r['error'] ?? 'Erreur lors de la mise à jour.';
+    if (!$pl) {
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) { header('Content-Type: application/json'); echo json_encode(['error'=>'invalid']); exit(); }
+        $err = 'Requête invalide.';
+    } else {
+        $action = $pl['_action'] ?? '';
+
+        // ── AJAX actions ──
+        if ($action === 'toggle_like') {
+            $r = prof_api_post('/projects/'.(int)($pl['id']??0).'/like', []);
+            header('Content-Type: application/json');
+            echo json_encode(['liked'=>$r['data']['liked']??false,'like_count'=>$r['data']['like_count']??0,'error'=>$r['data']['error']??null]);
+            exit();
+        } elseif ($action === 'add_comment') {
+            $r = prof_api_post('/projects/'.(int)($pl['id']??0).'/comments', ['content'=>$pl['content']??'']);
+            header('Content-Type: application/json');
+            echo json_encode(['comment'=>$r['data']['comment']??null,'error'=>$r['data']['error']??null]);
+            exit();
+        } elseif ($action === 'delete_comment') {
+            $r = prof_api_delete('/projects/'.(int)($pl['project_id']??0).'/comments/'.(int)($pl['comment_id']??0));
+            header('Content-Type: application/json');
+            echo json_encode(['ok'=>($r['code']===200||$r['code']===204),'error'=>$r['data']['error']??null]);
+            exit();
+        } elseif ($action === 'toggle_follow') {
+            $r = prof_api_post('/users/'.(int)($pl['id']??0).'/follow', []);
+            header('Content-Type: application/json');
+            echo json_encode(['following'=>$r['data']['following']??false,'followers_count'=>$r['data']['followers_count']??0,'error'=>$r['data']['error']??null]);
+            exit();
+        } elseif ($action === 'load_comments') {
+            $r = prof_api_get('/projects/'.(int)($pl['id']??0).'/comments');
+            header('Content-Type: application/json');
+            echo json_encode($r['data']);
+            exit();
+
+        // ── Edit profile ──
+        } else {
+            $payload = [];
+            foreach (['firstname','lastname','email','phone','grade','domain','image','password'] as $f)
+                if (isset($pl[$f]) && $pl[$f] !== '') $payload[$f] = $pl[$f];
+            $ch = curl_init('http://173.249.28.246:8090/api/v1/me');
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>'PUT',CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.($_SESSION['access']??'')],CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_TIMEOUT=>15]);
+            $body = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+            $r = json_decode($body, true) ?? [];
+            if ($code === 200) { header('Location: profile.php?saved=1'); exit(); }
+            $err = $r['error'] ?? 'Erreur lors de la mise à jour.';
+        }
     }
 }
 
@@ -66,7 +122,7 @@ if ($isOwnProfile) {
 } else {
     $res = api_post('/info', ['id' => $targetId]);
     if ($res['code'] !== 200) {
-        header('Location: main.php');
+        header('Location: dashboard.php');
         exit();
     }
     $subject  = $res['data']['user']     ?? [];
@@ -241,17 +297,58 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
   .section-tabs{flex-wrap:wrap}
   .form-row{grid-template-columns:1fr}
 }
+
+/* ─── LINKEDIN CARD STYLES (same as dashboard) ─── */
+.lk-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;transition:.25s;box-shadow:0 2px 10px rgba(27,110,63,.04);}
+.lk-card:hover{border-color:var(--green-m);box-shadow:0 8px 32px rgba(27,110,63,.1);}
+.lk-header{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;}
+.lk-header:hover{background:var(--fog,#f7faf8);}
+.lk-body{padding:2px 16px 14px;}
+.lk-meta-row{margin-top:10px;}
+.pc-img-wrap{width:100%;overflow:hidden;max-height:340px;background:var(--border);}
+.pc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.lk-card:hover .pc-img{transform:scale(1.02);}
+.lk-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 16px 5px;font-size:.78rem;color:var(--muted);}
+.lk-stat-item{display:flex;align-items:center;gap:5px;}
+.lk-divider{height:1px;background:var(--border);margin:0 16px;}
+.lk-actions{display:flex;gap:0;padding:4px 8px;}
+.lk-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border:none;background:none;border-radius:8px;font-family:inherit;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s;}
+.lk-action-btn:hover{background:var(--bg);color:var(--text);}
+.lk-action-btn.lk-liked{color:var(--orange);}
+.lk-comments-panel{border-top:1px solid var(--border);padding:12px 14px;}
+.lk-cmt-input-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.lk-cmt-av{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;overflow:hidden;flex-shrink:0;}
+.lk-cmt-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.lk-cmt-input-wrap{flex:1;display:flex;align-items:center;gap:6px;background:var(--bg);border:1.5px solid var(--border);border-radius:24px;padding:6px 10px 6px 14px;}
+.lk-cmt-input{flex:1;border:none;background:none;font-family:inherit;font-size:.82rem;color:var(--text);outline:none;}
+.lk-cmt-send{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;transition:.15s;}
+.lk-cmt-send:hover{background:var(--green-l);}
+.lk-cmt-list{max-height:220px;overflow-y:auto;}
+.lk-cmt-item{display:flex;gap:8px;margin-bottom:10px;}
+.lk-cmt-bubble{background:var(--bg);border-radius:0 12px 12px 12px;padding:9px 13px;flex:1;}
+.lk-cmt-author{font-size:.74rem;font-weight:800;color:var(--dark);margin-bottom:3px;}
+.lk-cmt-text{font-size:.82rem;color:var(--text);line-height:1.5;}
+.lk-cmt-meta{font-size:.7rem;color:var(--muted);margin-top:4px;}
+.lk-cmt-del{color:var(--orange);cursor:pointer;font-weight:700;}
+.lk-cmt-del:hover{text-decoration:underline;}
+.lk-cmt-loading,.lk-cmt-empty{text-align:center;padding:12px;font-size:.8rem;color:var(--muted);}
+.pch-av{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;overflow:hidden;flex-shrink:0;}
+.pch-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.pch-name{font-size:.88rem;font-weight:800;color:var(--dark);}
+.pch-meta{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:4px;margin-top:2px;}
+.pch-dot{width:3px;height:3px;border-radius:50%;background:var(--muted);display:inline-block;}
+
 </style>
 </head>
 <body>
 
 <!-- ─── NAV ─── -->
 <nav>
-  <a class="nav-logo" href="main.php">
+  <a class="nav-logo" href="dashboard.php">
     <img src="https://i.imgur.com/zl5jHaY.png" alt="AI House UHBC">
     <span class="nav-logo-text">AI <span>House</span></span>
   </a>
-  <a class="back-btn" href="main.php">
+  <a class="back-btn" href="dashboard.php">
     <i class="fa-solid fa-arrow-left"></i> Retour
   </a>
 </nav>
@@ -348,47 +445,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 
   <!-- OWNED PROJECTS -->
   <div class="stab-panel active" id="panel-owned">
-    <?php if(empty($owned)): ?>
-      <div class="empty-state">
-        <div class="es-icon"><i class="fa-solid fa-flask"></i></div>
-        <div class="es-title">Aucun projet créé</div>
-        <div class="es-sub"><?= $isOwnProfile ? 'Revenez au feed pour créer votre premier projet !' : 'Cet étudiant n\'a pas encore créé de projet.' ?></div>
-      </div>
-    <?php else: ?>
-      <?php foreach($owned as $i => $p): ?>
-        <?= renderProjectCard($p, $catClass, $catLabel, $i) ?>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    <div id="feed-owned"></div>
   </div>
 
   <!-- CONTRIB PROJECTS -->
   <div class="stab-panel" id="panel-contrib">
-    <?php if(empty($contrib)): ?>
-      <div class="empty-state">
-        <div class="es-icon"><i class="fa-solid fa-users"></i></div>
-        <div class="es-title">Aucune contribution</div>
-        <div class="es-sub"><?= $isOwnProfile ? 'Rejoignez des projets depuis le feed !' : 'Cet étudiant ne contribue à aucun projet.' ?></div>
-      </div>
-    <?php else: ?>
-      <?php foreach($contrib as $i => $p): ?>
-        <?= renderProjectCard($p, $catClass, $catLabel, $i) ?>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    <div id="feed-contrib"></div>
   </div>
 
   <!-- ALL PROJECTS -->
   <div class="stab-panel" id="panel-all">
-    <?php if(empty($projects)): ?>
-      <div class="empty-state">
-        <div class="es-icon"><i class="fa-solid fa-flask"></i></div>
-        <div class="es-title">Aucun projet</div>
-        <div class="es-sub"><?= $isOwnProfile ? 'Créez ou rejoignez un projet depuis le feed !' : 'Cet étudiant n\'est associé à aucun projet.' ?></div>
-      </div>
-    <?php else: ?>
-      <?php foreach($projects as $i => $p): ?>
-        <?= renderProjectCard($p, $catClass, $catLabel, $i) ?>
-      <?php endforeach; ?>
-    <?php endif; ?>
+    <div id="feed-all"></div>
   </div>
 
 </div><!-- /profile-container -->
@@ -491,8 +558,8 @@ async function toggleFollow(userId){
   const btn=document.getElementById('follow-btn');
   if(!btn) return;
   try{
-    const r=await fetch(`http://127.0.0.1:5000/api/v1/users/${userId}/follow`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ACCESS_TOKEN}});
-    const data=await r.json();
+    const data=await _profPostAjax({_action:'toggle_follow',id:userId});
+    if(data.error){showToast(data.error);return;}
     const following=data.following;
     btn.classList.toggle('following',following);
     btn.innerHTML=following?'<i class="fa-solid fa-user-check"></i> Abonné':'<i class="fa-solid fa-user-plus"></i> Suivre';
@@ -500,6 +567,185 @@ async function toggleFollow(userId){
     if(countEl) countEl.textContent=data.followers_count??Math.max(0,parseInt(countEl.textContent||0)+(following?1:-1));
   }catch(e){showToast('Erreur réseau');}
 }
+
+// ─── PROFILE PROJECTS DATA ───
+const PROF_OWNED   = <?= json_encode(array_values($owned)) ?>;
+const PROF_CONTRIB = <?= json_encode(array_values($contrib)) ?>;
+const PROF_ALL     = <?= json_encode(array_values($projects)) ?>;
+const ME_PROF      = <?= json_encode(['id'=>(int)($me['id']??0),'firstname'=>$me['firstname'],'lastname'=>$me['lastname'],'image'=>$me['image']??'']) ?>;
+const IS_OWN       = <?= $isOwnProfile ? 'true' : 'false' ?>;
+
+const PCAT_CLASS = {nlp:'cat-nlp',vision:'cat-vision',data:'cat-data',rl:'cat-rl',ml:'cat-ml',other:'cat-other'};
+const PCAT_LABEL = {nlp:'NLP',vision:'Vision',data:'Data',rl:'RL',ml:'ML',other:'Autre'};
+
+function pGetInitials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
+function pTimeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
+
+function pBuildCard(p, i){
+  const isOwner = (p.role||'') === 'owner';
+  const owner   = p.owner || {firstname: p.owner_firstname||'', lastname: p.owner_lastname||'', image: p.owner_image||'', grade: p.owner_grade||'', id: p.owner_id||0};
+  const initials = pGetInitials(owner.firstname, owner.lastname);
+  const catClass = PCAT_CLASS[p.category]||'cat-other';
+  const catLabel = PCAT_LABEL[p.category]||p.category;
+  const liked    = p.is_liked||false;
+  const likeCount    = p.like_count||0;
+  const commentCount = p.comment_count||0;
+  const statusHtml = p.status==='open'
+    ? `<span class="pc-status st-open"><span class="status-dot"></span>Ouvert</span>`
+    : `<span class="pc-status st-done"><span class="status-dot"></span>Terminé</span>`;
+  const roleBadge = isOwner
+    ? `<span class="role-badge-owner"><i class="fa-solid fa-crown"></i> Créateur</span>`
+    : `<span class="role-badge-contrib"><i class="fa-solid fa-users"></i> Contributeur</span>`;
+  const avHtml = owner.image ? `<img src="${owner.image}" alt="">` : initials;
+  const imgSection = p.image
+    ? `<div class="pc-img-wrap"><img class="pc-img" src="${p.image}" alt="" loading="lazy" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
+    : '';
+  const meAv = ME_PROF.image ? `<img src="${ME_PROF.image}" alt="">` : pGetInitials(ME_PROF.firstname, ME_PROF.lastname);
+  const el = document.createElement('div');
+  el.className = 'project-card lk-card';
+  el.style.animationDelay = (i*80)+'ms';
+  el.dataset.projectId = p.id;
+  el.innerHTML = `
+    <div class="lk-header" onclick="window.location.href='profile.php?id=${owner.id||0}'" style="cursor:pointer">
+      <div class="pch-av">${avHtml}</div>
+      <div class="pch-info">
+        <div class="pch-name">${owner.firstname} ${owner.lastname}</div>
+        <div class="pch-meta"><span>${owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
+      </div>
+      <span class="pc-cat-badge ${catClass}">${catLabel}</span>
+      ${roleBadge}
+    </div>
+    <div class="lk-body">
+      <div class="pc-title">${p.title}</div>
+      ${p.description ? `<p class="pc-desc">${p.description}</p>` : ''}
+      <div class="lk-meta-row">${statusHtml}</div>
+    </div>
+    ${imgSection}
+    <div class="lk-stats-bar">
+      <span class="lk-stat-item"><i class="fa-solid fa-heart" style="color:var(--orange)"></i> <span class="lk-like-count">${likeCount}</span></span>
+      <span class="lk-stat-item" style="cursor:pointer" onclick="pToggleComments(this.closest('.lk-card').querySelector('.lk-action-btn:last-child'),${p.id})"><i class="fa-regular fa-comment" style="color:var(--muted)"></i> <span class="lk-cmt-count">${commentCount}</span></span>
+    </div>
+    <div class="lk-divider"></div>
+    <div class="lk-actions">
+      <button class="lk-action-btn${liked?' lk-liked':''}" onclick="pToggleLike(this,${p.id})">
+        <i class="${liked?'fa-solid':'fa-regular'} fa-heart"></i> J'aime
+      </button>
+      <button class="lk-action-btn" onclick="pToggleComments(this,${p.id})">
+        <i class="fa-regular fa-comment"></i> Commenter
+      </button>
+    </div>
+    <div class="lk-comments-panel" id="pcmt-panel-${p.id}" style="display:none">
+      <div class="lk-cmt-input-row">
+        <div class="lk-cmt-av">${meAv}</div>
+        <div class="lk-cmt-input-wrap">
+          <input class="lk-cmt-input" id="pcmt-input-${p.id}" type="text" placeholder="Écrire un commentaire…" onkeydown="if(event.key==='Enter')pSubmitComment(${p.id})">
+          <button class="lk-cmt-send" onclick="pSubmitComment(${p.id})"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+      <div class="lk-cmt-list" id="pcmt-list-${p.id}"><div class="lk-cmt-loading"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
+    </div>`;
+  return el;
+}
+
+function pRenderFeed(projects, containerId){
+  const cont = document.getElementById(containerId);
+  if(!projects.length){
+    cont.innerHTML = `<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-flask"></i></div><div class="es-title">Aucun projet</div></div>`;
+    return;
+  }
+  projects.forEach((p, i) => cont.appendChild(pBuildCard(p, i)));
+}
+
+// ─── LIKE ───
+async function _profPostAjax(payload){
+  const fd=new FormData();
+  fd.append('_imadenc',_aes(payload));
+  fd.append('_dok',_aes({t:Date.now()}));
+  const r=await fetch('profile.php',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
+  return r.json();
+}
+
+async function pToggleLike(btn, projectId){
+  btn.disabled = true;
+  try{
+    const data = await _profPostAjax({_action:'toggle_like',id:projectId});
+    if(data.error){showToast(data.error);return;}
+    const liked = data.liked; const count = data.like_count??0;
+    btn.classList.toggle('lk-liked', liked);
+    btn.innerHTML = `<i class="${liked?'fa-solid':'fa-regular'} fa-heart"></i> J'aime`;
+    btn.closest('.lk-card').querySelector('.lk-like-count').textContent = count;
+  }catch(e){showToast('Erreur réseau');}
+  finally{btn.disabled=false;}
+}
+
+// ─── COMMENTS ───
+const _pLoaded = {};
+async function pToggleComments(btn, projectId){
+  const panel = document.getElementById('pcmt-panel-'+projectId);
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if(!open && !_pLoaded[projectId]) await pLoadComments(projectId);
+}
+async function pLoadComments(projectId){
+  const list = document.getElementById('pcmt-list-'+projectId);
+  list.innerHTML = `<div class="lk-cmt-loading"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
+  try{
+    const data = await _profPostAjax({_action:'load_comments',id:projectId});
+    _pLoaded[projectId] = true;
+    const comments = data.comments||[];
+    if(!comments.length){list.innerHTML=`<div class="lk-cmt-empty">Aucun commentaire. Soyez le premier !</div>`;return;}
+    list.innerHTML = comments.map(cm=>{
+      const au = cm.user||cm.author||{};
+      const cav = au.image?`<img src="${au.image}" alt="">`:pGetInitials(au.firstname||'?',au.lastname||'');
+      const isMe = au.id === ME_PROF.id;
+      return `<div class="lk-cmt-item" id="pcmt-${cm.id}">
+        <div class="lk-cmt-av">${cav}</div>
+        <div class="lk-cmt-bubble">
+          <div class="lk-cmt-author">${au.firstname||''} ${au.lastname||''}</div>
+          <div class="lk-cmt-text">${cm.content}</div>
+          <div class="lk-cmt-meta">${pTimeAgo(cm.created_at)}${isMe?` · <span class="lk-cmt-del" onclick="pDeleteComment(${projectId},${cm.id})">Supprimer</span>`:''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="lk-cmt-empty">Erreur de chargement.</div>`;}
+}
+async function pSubmitComment(projectId){
+  const input = document.getElementById('pcmt-input-'+projectId);
+  const text = input.value.trim(); if(!text) return;
+  input.value = '';
+  try{
+    const data = await _profPostAjax({_action:'add_comment',id:projectId,content:text});
+    if(data.error){showToast(data.error);return;}
+    const cm = data.comment; if(!cm) return;
+    const list = document.getElementById('pcmt-list-'+projectId);
+    const cav = ME_PROF.image?`<img src="${ME_PROF.image}" alt="">`:pGetInitials(ME_PROF.firstname,ME_PROF.lastname);
+    const newEl = document.createElement('div');
+    newEl.className='lk-cmt-item'; newEl.id='pcmt-'+cm.id;
+    newEl.innerHTML=`<div class="lk-cmt-av">${cav}</div><div class="lk-cmt-bubble"><div class="lk-cmt-author">${ME_PROF.firstname} ${ME_PROF.lastname}</div><div class="lk-cmt-text">${cm.content}</div><div class="lk-cmt-meta">À l'instant · <span class="lk-cmt-del" onclick="pDeleteComment(${projectId},${cm.id})">Supprimer</span></div></div>`;
+    list.querySelector('.lk-cmt-empty')?.remove();
+    list.appendChild(newEl);
+    const card = document.querySelector(`.lk-card[data-project-id="${projectId}"]`);
+    if(card){const el=card.querySelector('.lk-cmt-count');if(el)el.textContent=parseInt(el.textContent||0)+1;}
+  }catch(e){showToast('Erreur réseau');}
+}
+async function pDeleteComment(projectId, commentId){
+  if(!confirm('Supprimer ce commentaire ?')) return;
+  try{
+    const data = await _profPostAjax({_action:'delete_comment',project_id:projectId,comment_id:commentId});
+    if(data.ok){
+      document.getElementById('pcmt-'+commentId)?.remove();
+      const card = document.querySelector(`.lk-card[data-project-id="${projectId}"]`);
+      if(card){const el=card.querySelector('.lk-cmt-count');if(el)el.textContent=Math.max(0,parseInt(el.textContent||0)-1);}
+    } else { showToast(data.error||'Erreur suppression'); }
+  }catch(e){showToast('Erreur réseau');}
+}
+
+// ─── INIT FEED ───
+window.addEventListener('DOMContentLoaded', function(){
+  pRenderFeed(PROF_OWNED,   'feed-owned');
+  pRenderFeed(PROF_CONTRIB, 'feed-contrib');
+  pRenderFeed(PROF_ALL,     'feed-all');
+});
 
 <?php if($isOwnProfile): ?>
 <?php if($success): ?>window.addEventListener('DOMContentLoaded',function(){showToast('<?= $success ?>');});<?php endif; ?>
@@ -543,23 +789,3 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
 </script>
 </body>
 </html>
-<?php
-function renderProjectCard(array $p, array $catClass, array $catLabel, int $i): string {
-    $cc = $catClass[$p['category']] ?? 'cat-other';
-    $cl = $catLabel[$p['category']] ?? htmlspecialchars($p['category']);
-    $isOwner = ($p['role'] ?? '') === 'owner';
-    if ($p['status']==="open" && !$p['is_full']) $statusHtml = '<span class="pc-status st-open"><span class="status-dot"></span>Ouvert</span>';
-    elseif ($p['is_full']) $statusHtml = '<span class="pc-status st-full"><span class="status-dot"></span>Complet</span>';
-    else $statusHtml = '<span class="pc-status st-done"><span class="status-dot"></span>Terminé</span>';
-    $roleBadge = $isOwner ? '<span class="role-badge-owner"><i class="fa-solid fa-crown"></i> Créateur</span>' : '<span class="role-badge-contrib"><i class="fa-solid fa-users"></i> Contributeur</span>';
-    $members = ($p['member_count'] ?? 0).($p['max_members'] ? '/'.$p['max_members'] : '').' membres';
-    $title = htmlspecialchars($p['title'] ?? '');
-    $desc  = htmlspecialchars($p['description'] ?? '');
-    return '<div class="project-card" style="animation-delay:'.($i*70).'ms">
-      <div class="pc-accent"></div>
-      <div class="pc-top-bar"><span class="pc-cat-badge '.$cc.'">'.  $cl.'</span>'.$roleBadge.'</div>
-      <div class="pc-body"><div class="pc-title">'.$title.'</div>'.($desc ? '<p class="pc-desc">'.$desc.'</p>' : '').'</div>
-      <div class="pc-footer"><div style="display:flex;align-items:center;gap:12px">'.$statusHtml.'<span style="font-size:.74rem;color:var(--muted)"><i class="fa-solid fa-users" style="margin-right:3px"></i>'.$members.'</span></div></div>
-    </div>';
-}
-?>

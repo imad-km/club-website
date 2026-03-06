@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
     if (!$pl) { $err = 'Invalid request'; }
     else {
-        $ch = curl_init('http://127.0.0.1:5000/api/v1/student/login');
+        $ch = curl_init('http://173.249.28.246:8090/api/v1/student/login');
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>trim($pl['e']??''),'password'=>$pl['k']??'']),CURLOPT_TIMEOUT=>15]);
         $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
         $r=json_decode($body,true)??[];

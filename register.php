@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($pw) < 6) { $err = 'Password must be at least 6 characters'; $step = 'form'; }
             else {
                 $data = array_filter(['firstname'=>trim($pl['fn']??''),'lastname'=>trim($pl['ln']??''),'email'=>$email,'phone'=>trim($pl['ph']??''),'password'=>$pw,'image'=>$pl['img']??null,'grade'=>strtolower(trim($pl['gr']??'')),'domain'=>strtolower(trim($pl['dm']??''))], fn($v) => $v !== '' && $v !== null);
-                $ch = curl_init('http://127.0.0.1:5000/api/v1/student/pre-register');
+                $ch = curl_init('http://173.249.28.246:8090/api/v1/student/pre-register');
                 curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode($data),CURLOPT_TIMEOUT=>15]);
                 $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
                 $r=json_decode($body,true)??[];
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else {
             $email = trim($pl['email']??'');
             $otp   = trim($pl['otp']??'');
-            $ch = curl_init('http://127.0.0.1:5000/api/v1/student/verify-otp');
+            $ch = curl_init('http://173.249.28.246:8090/api/v1/student/verify-otp');
             curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>$email,'otp'=>$otp]),CURLOPT_TIMEOUT=>15]);
             $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             $r=json_decode($body,true)??[];
@@ -52,6 +52,38 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
 <link rel="stylesheet" href="css/global.css"/>
 <link rel="stylesheet" href="css/auth.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+.otp-inputs{display:flex;gap:12px;justify-content:center;margin:28px 0 24px;}
+.otp-input{
+  width:54px;height:62px;text-align:center;
+  font-size:24px;font-weight:700;font-family:'Sora',sans-serif;
+  border:2px solid var(--line);border-radius:12px;
+  color:var(--txt);background:#fff;outline:none;
+  transition:border-color .18s,box-shadow .18s,transform .15s,background .18s;
+  caret-color:var(--green);
+  -webkit-appearance:none;appearance:none;
+}
+.otp-input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(26,122,74,.12);
+  transform:translateY(-2px) scale(1.06);
+  background:#fff;
+  z-index:1;position:relative;
+}
+.otp-input.otp-filled{
+  border-color:var(--green);
+  background:var(--green-p);
+  color:var(--green);
+}
+.otp-input:focus.otp-filled{
+  background:#fff;
+  color:var(--txt);
+}
+@media(max-width:420px){
+  .otp-input{width:42px;height:52px;font-size:20px;border-radius:10px;}
+  .otp-inputs{gap:8px;}
+}
+</style>
 </head>
 <body class="register-body">
 
@@ -140,12 +172,12 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
       <input type="hidden" name="_dok" id="otp_dok"/>
       <input type="hidden" id="otpEmail" value="<?= htmlspecialchars($email) ?>"/>
       <div class="otp-inputs">
-        <input type="text" maxlength="1" inputmode="numeric" id="d0" onkeyup="otpNav(this,null,'d1')"/>
-        <input type="text" maxlength="1" inputmode="numeric" id="d1" onkeyup="otpNav(this,'d0','d2')"/>
-        <input type="text" maxlength="1" inputmode="numeric" id="d2" onkeyup="otpNav(this,'d1','d3')"/>
-        <input type="text" maxlength="1" inputmode="numeric" id="d3" onkeyup="otpNav(this,'d2','d4')"/>
-        <input type="text" maxlength="1" inputmode="numeric" id="d4" onkeyup="otpNav(this,'d3','d5')"/>
-        <input type="text" maxlength="1" inputmode="numeric" id="d5" onkeyup="otpNav(this,'d4',null)"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d0" autocomplete="one-time-code"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d1"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d2"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d3"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d4"/>
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d5"/>
       </div>
       <button class="auth-btn" type="submit">Verify &amp; Create Account</button>
     </form>
@@ -180,21 +212,67 @@ if (regForm) {
     regForm.submit();
   });
 }
-var otpForm = document.getElementById('otpForm');
-if (otpForm) {
-  document.getElementById('d0')?.focus();
+(function() {
+  var otpForm = document.getElementById('otpForm');
+  if (!otpForm) return;
+
+  var inputs = Array.from(document.querySelectorAll('.otp-input'));
+  inputs[0].focus();
+
+  inputs.forEach(function(inp, idx) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (inp.value) {
+          inp.value = '';
+          inp.classList.remove('otp-filled');
+        } else if (idx > 0) {
+          inputs[idx - 1].value = '';
+          inputs[idx - 1].classList.remove('otp-filled');
+          inputs[idx - 1].focus();
+        }
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        e.preventDefault(); inputs[idx - 1].focus();
+      } else if (e.key === 'ArrowRight' && idx < 5) {
+        e.preventDefault(); inputs[idx + 1].focus();
+      }
+    });
+
+    inp.addEventListener('input', function(e) {
+      var val = inp.value.replace(/[^0-9]/g, '').slice(-1);
+      inp.value = val;
+      if (val) {
+        inp.classList.add('otp-filled');
+        if (idx < 5) inputs[idx + 1].focus();
+        if (inputs.every(function(i) { return i.value !== ''; })) otpForm.requestSubmit();
+      } else {
+        inp.classList.remove('otp-filled');
+      }
+    });
+
+    inp.addEventListener('paste', function(e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+      text.split('').forEach(function(ch, i) {
+        if (inputs[i]) { inputs[i].value = ch; inputs[i].classList.add('otp-filled'); }
+      });
+      var next = Math.min(text.length, 5);
+      inputs[next].focus();
+      if (text.length === 6) otpForm.requestSubmit();
+    });
+
+    inp.addEventListener('focus', function() { inp.select(); });
+  });
+
   otpForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    var otp = ['d0','d1','d2','d3','d4','d5'].map(id=>document.getElementById(id).value).join('');
-    document.getElementById('otp_imadenc').value = _aes({email:document.getElementById('otpEmail').value, otp:otp});
-    document.getElementById('otp_dok').value = _aes({t:Date.now()});
+    var otp = inputs.map(function(i) { return i.value; }).join('');
+    if (otp.length < 6) { inputs[otp.length > 0 ? otp.length : 0].focus(); return; }
+    document.getElementById('otp_imadenc').value = _aes({email: document.getElementById('otpEmail').value, otp: otp});
+    document.getElementById('otp_dok').value = _aes({t: Date.now()});
     otpForm.submit();
   });
-}
-function otpNav(el, prevId, nextId) {
-  if (el.value.length === 1 && nextId) document.getElementById(nextId)?.focus();
-  if (el.value === '' && prevId)       document.getElementById(prevId)?.focus();
-}
+})();
 </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 // api_helper.php — shared API calls using the JWT access token from session
 require_once __DIR__ . '/config.php';
 
-define('API_BASE', 'http://127.0.0.1:5000/api/v1');
+define('API_BASE', 'http://173.249.28.246:8090/api/v1');
 
 /**
  * Make an authenticated API request.
