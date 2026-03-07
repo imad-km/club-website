@@ -3,7 +3,7 @@ require_once 'includes/config.php';
 require_once 'includes/api_helper.php';
 session_start();
 
-// ── helper: make DELETE/POST curl call to Flask API ──
+
 function api_delete(string $path): array {
     $token = $_SESSION['access'] ?? '';
     $ch = curl_init('http://173.249.28.246:8090/api/v1'.$path);
@@ -15,14 +15,12 @@ function api_delete(string $path): array {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
     if (!$pl) {
-        // Check if AJAX
+
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) { header('Content-Type: application/json'); echo json_encode(['error'=>'invalid']); exit(); }
         header('Location: dashboard.php?err=invalid'); exit();
     }
     $action = $pl['_action'] ?? '';
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']);
-
-    // ── AJAX-only actions (return JSON) ──
     if ($action === 'toggle_like') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/like', []);
         header('Content-Type: application/json');
@@ -69,8 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
-
-    // ── Normal form actions (redirect) ──
     } elseif ($action === 'join_project') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/join', []);
         header('Location: dashboard.php?msg='.($r['code']===201 ? 'project_joined' : 'err_'.urlencode($r['data']['error']??'error')));
@@ -121,24 +117,24 @@ if (isset($_GET['msg'])) {
 <title>AI House UHBC — Espace Étudiants</title>
 <link rel="stylesheet" href="css/global.css"/>
 <link rel="stylesheet" href="css/dashboard.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <style>
-/* ─── STUDENT PROFILE MODAL ─── */
 .sp-modal-box{background:var(--white);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.2);animation:cardIn .35s cubic-bezier(.16,1,.3,1) both;}
 .sp-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:1;}
-.sp-modal-title{font-family:'Fraunces',serif;font-weight:800;font-size:1rem;color:var(--dark);}
+.sp-modal-title{font-family:'Playfair Display',serif;font-weight:800;font-size:1rem;color:var(--dark);}
 .sp-modal-body{padding:0;}
 .sp-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;}
 .sp-spinner{font-size:1.6rem;color:var(--green);}
 .sp-hero{display:flex;align-items:center;gap:16px;padding:22px 22px 16px;border-bottom:1px solid var(--border);}
 .sp-avatar{width:68px;height:68px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;overflow:hidden;flex-shrink:0;border:3px solid var(--green-m);}
-.sp-name{font-family:'Fraunces',serif;font-weight:800;font-size:1.1rem;color:var(--dark);margin-bottom:5px;}
+.sp-name{font-family:'Playfair Display',serif;font-weight:800;font-size:1.1rem;color:var(--dark);margin-bottom:5px;}
 .sp-grade,.sp-domain{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:3px;}
 .sp-grade i,.sp-domain i{color:var(--green);font-size:.72rem;}
 .sp-stats{display:flex;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);}
 .sp-stat{flex:1;text-align:center;}
-.sp-stat-val{font-family:'Fraunces',serif;font-weight:900;font-size:1.4rem;color:var(--green);}
+.sp-stat-val{font-family:'Playfair Display',serif;font-weight:900;font-size:1.4rem;color:var(--green);}
 .sp-stat-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-top:2px;}
 .sp-stat-div{width:1px;height:36px;background:var(--border);}
 .sp-info-section{padding:16px 22px;border-bottom:1px solid var(--border);}
@@ -147,7 +143,7 @@ if (isset($_GET['msg'])) {
 .sp-info-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:2px;}
 .sp-info-val{font-size:.86rem;font-weight:600;color:var(--dark);}
 .sp-projects-section{padding:16px 22px;}
-.sp-section-title{font-family:'Fraunces',serif;font-weight:800;font-size:.95rem;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sp-section-title{font-family:'Playfair Display',serif;font-weight:800;font-size:.95rem;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .sp-project-card{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
 .sp-proj-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .sp-owner-badge{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--orange-p);color:var(--orange);}
@@ -157,19 +153,19 @@ if (isset($_GET['msg'])) {
 .sp-proj-footer{display:flex;align-items:center;justify-content:space-between;}
 .sp-no-projects{display:flex;align-items:center;gap:10px;padding:24px;font-size:.86rem;color:var(--muted);}
 .sp-no-projects i{font-size:1.2rem;color:var(--green);}
-/* TOAST */
+
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:12px 22px;border-radius:12px;font-size:.85rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.3);z-index:9999;opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:10px;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast-icon{color:#22953f;}
 
-/* ─── LINKEDIN-STYLE PROJECT CARD ─── */
+
 .lk-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;transition:.25s;box-shadow:0 2px 10px rgba(27,110,63,.04);animation:cardUp .4s ease both;}
 .lk-card:hover{border-color:var(--green-m);box-shadow:0 8px 32px rgba(27,110,63,.1);}
 .lk-header{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;cursor:pointer;transition:.15s;}
 .lk-header:hover{background:var(--fog);}
 .lk-body{padding:2px 16px 14px;}
 .lk-meta-row{margin-top:10px;}
-/* Project image */
+
 .pc-img-wrap{width:100%;overflow:hidden;max-height:340px;background:var(--border);}
 .pc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
 .lk-card:hover .pc-img{transform:scale(1.02);}
@@ -181,22 +177,22 @@ if (isset($_GET['msg'])) {
 .pc-img-ph-ml{background:linear-gradient(135deg,#fff3cd,#fde68a);color:#b45309;}
 .pc-img-ph-other{background:linear-gradient(135deg,var(--fog),var(--border));color:var(--muted);}
 .pc-img-ph i{font-size:2rem;opacity:.5;}
-/* Stats bar */
+
 .lk-stats-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 16px 5px;font-size:.78rem;color:var(--muted);}
 .lk-stat-item{display:flex;align-items:center;gap:5px;}
 .lk-divider{height:1px;background:var(--border);margin:0 16px;}
-/* Action buttons */
+
 .lk-actions{display:flex;gap:0;padding:4px 8px;}
-.lk-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border:none;background:none;border-radius:8px;font-family:inherit;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s;}
+.lk-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border:none;background:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s;}
 .lk-action-btn:hover{background:var(--fog);color:var(--text);}
 .lk-action-btn.lk-liked{color:var(--orange);}
-/* Comments panel */
+
 .lk-comments-panel{border-top:1px solid var(--border);padding:12px 14px;}
 .lk-cmt-input-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .lk-cmt-av{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;overflow:hidden;flex-shrink:0;}
 .lk-cmt-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .lk-cmt-input-wrap{flex:1;display:flex;align-items:center;gap:6px;background:var(--fog);border:1.5px solid var(--border);border-radius:24px;padding:6px 10px 6px 14px;}
-.lk-cmt-input{flex:1;border:none;background:none;font-family:inherit;font-size:.82rem;color:var(--txt);outline:none;}
+.lk-cmt-input{flex:1;border:none;background:none;font-family:'Inter',sans-serif;font-size:.82rem;color:var(--txt);outline:none;}
 .lk-cmt-input::placeholder{color:var(--muted);}
 .lk-cmt-send{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0;transition:.15s;}
 .lk-cmt-send:hover{background:var(--green-l);}
@@ -209,12 +205,12 @@ if (isset($_GET['msg'])) {
 .lk-cmt-del{color:var(--orange);cursor:pointer;font-weight:700;}
 .lk-cmt-del:hover{text-decoration:underline;}
 .lk-cmt-loading,.lk-cmt-empty{text-align:center;padding:12px;font-size:.8rem;color:var(--muted);}
-/* Follow button in student modal */
-.sp-follow-btn{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:8px 18px;border-radius:8px;background:var(--green);color:#fff;border:none;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:.2s;}
+
+.sp-follow-btn{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:8px 18px;border-radius:8px;background:var(--green);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:.2s;}
 .sp-follow-btn:hover{background:var(--green-l);transform:translateY(-1px);}
 .sp-follow-btn.sp-following{background:var(--white);color:var(--green);border:1.5px solid var(--green);}
 .sp-follow-btn.sp-following:hover{background:var(--green-p);}
-/* ─── PROJECT IMAGE UPLOAD ─── */
+
 .proj-img-upload{position:relative;width:100%;height:160px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:.2s;background:var(--fog);}
 .proj-img-upload:hover{border-color:var(--green);background:var(--green-p);}
 .proj-img-ph{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);pointer-events:none;}
@@ -223,22 +219,31 @@ if (isset($_GET['msg'])) {
 .proj-img-ph small{font-size:.7rem;color:var(--muted);}
 .proj-img-clear{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;z-index:2;transition:.15s;}
 .proj-img-clear:hover{background:rgba(180,0,0,.8);}
-/* UNI POST styles */
+
 .uni-post-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .uni-post-badge{font-size:.68rem;font-weight:700;color:var(--green);background:var(--green-p);padding:3px 8px;border-radius:10px;display:flex;align-items:center;gap:4px;}
 .uni-post-date-badge{font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
 .uni-post-footer{padding:10px 18px;border-top:1px solid var(--border);background:var(--bg);}
 .uni-post-read-btn{font-size:.76rem;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;}
 .uni-post-arrow{font-size:.6rem;transform:rotate(180deg);}
-/* PROGRESS BAR segments */
+
 .sv-prog-seg{flex:1;height:3px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden;}
 .sv-prog-fill{height:100%;background:#fff;width:0;border-radius:2px;}
 .sv-prog-fill.instant{width:100%;transition:none;}
+#photo-lightbox{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s;}
+#photo-lightbox.lb-open{background:rgba(0,0,0,.92);pointer-events:all;}
+#photo-lightbox.lb-open #lb-img-wrap{opacity:1;transform:scale(1);}
+#lb-img-wrap{opacity:0;transform:scale(.88);transition:opacity .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1);position:relative;max-width:92vw;max-height:90vh;display:flex;align-items:center;justify-content:center;}
+#lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;box-shadow:0 32px 80px rgba(0,0,0,.6);display:block;}
+#lb-close{position:fixed;top:20px;right:24px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);color:#fff;font-size:1.1rem;cursor:pointer;display:none;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px);}
+#lb-close:hover{background:rgba(255,255,255,.25);transform:scale(1.1);}
+#photo-lightbox.lb-open #lb-close{display:flex;}
+#lb-caption{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:.8rem;background:rgba(0,0,0,.45);padding:7px 18px;border-radius:20px;backdrop-filter:blur(6px);pointer-events:none;white-space:nowrap;max-width:80vw;overflow:hidden;text-overflow:ellipsis;display:none;}
+#photo-lightbox.lb-open #lb-caption{display:block;}
+.lb-trigger{cursor:zoom-in!important;}
 </style>
 </head>
 <body>
-
-<!-- ─── NAV ─── -->
 <nav class="top-nav">
   <a class="nav-logo" href="dashboard.php">
     <img src="https://i.imgur.com/zl5jHaY.png" alt="AI House UHBC">
@@ -252,13 +257,7 @@ if (isset($_GET['msg'])) {
     <div class="search-dropdown" id="search-dropdown"></div>
   </div>
   <div class="nav-right">
-    <button class="nav-notif mob-search-btn" id="mob-search-btn" onclick="openMobileSearch()" style="display:none">
-      <i class="fa-solid fa-magnifying-glass"></i>
-    </button>
-    <div class="nav-notif">
-      <i class="fa-regular fa-bell"></i>
-      <?php if(count($announcements_data) > 0): ?><div class="notif-dot"></div><?php endif; ?>
-    </div>
+
     <div class="nav-av" id="nav-av-btn" onclick="window.location.href='profile.php'">
       <?php if($me['image']): ?>
         <img src="<?= htmlspecialchars($me['image']) ?>" alt="">
@@ -272,10 +271,8 @@ if (isset($_GET['msg'])) {
   </div>
 </nav>
 
-<!-- ─── MAIN LAYOUT ─── -->
-<div class="main-layout">
 
-  <!-- FEED -->
+<div class="main-layout">
   <div class="feed-area">
     <div class="feed-header">
       <div><div class="feed-title">Espace <span>Étudiants</span></div></div>
@@ -283,8 +280,6 @@ if (isset($_GET['msg'])) {
         <i class="fa-solid fa-plus"></i> Nouveau projet
       </button>
     </div>
-
-    <!-- TABS -->
     <div class="feed-tabs">
       <button class="feed-tab active" onclick="switchTab('projects',this)">
         <i class="fa-solid fa-flask"></i> Projets
@@ -302,8 +297,6 @@ if (isset($_GET['msg'])) {
         <i class="fa-solid fa-university"></i> Université
       </button>
     </div>
-
-    <!-- TAB: PROJECTS -->
     <div class="tab-panel active" id="panel-projects">
       <div class="feed-filters" id="feed-filters" style="margin-bottom:16px">
         <button class="ff-btn active" onclick="filterFeed(this,'all')">Tous</button>
@@ -324,8 +317,6 @@ if (isset($_GET['msg'])) {
         <div class="es-sub">Essayez un autre filtre ou revenez plus tard.</div>
       </div>
     </div>
-
-    <!-- TAB: ANNOUNCEMENTS -->
     <div class="tab-panel" id="panel-announcements">
       <div id="ann-container"></div>
       <div class="empty-state" id="ann-empty" style="display:none">
@@ -333,8 +324,6 @@ if (isset($_GET['msg'])) {
         <div class="es-title">Aucune annonce</div>
       </div>
     </div>
-
-    <!-- TAB: EVENTS -->
     <div class="tab-panel" id="panel-events">
       <div id="events-container"></div>
       <div class="empty-state" id="events-empty" style="display:none">
@@ -342,8 +331,6 @@ if (isset($_GET['msg'])) {
         <div class="es-title">Aucun événement</div>
       </div>
     </div>
-
-    <!-- TAB: UNIVERSITY -->
     <div class="tab-panel" id="panel-university">
       <div id="uni-container">
         <div class="uni-loading" id="uni-loading">
@@ -360,8 +347,6 @@ if (isset($_GET['msg'])) {
       </div>
     </div>
   </div>
-
-  <!-- SIDEBAR -->
   <div class="sidebar-area">
     <div class="s-card">
       <div class="profile-mini" onclick="window.location.href='profile.php'">
@@ -414,8 +399,6 @@ if (isset($_GET['msg'])) {
     </div>
   </div>
 </div>
-
-<!-- ─── CREATE PROJECT MODAL ─── -->
 <div class="modal-overlay" id="create-project-modal" onclick="handleModalOverlayClick(event)">
   <div class="modal-box">
     <div class="modal-head">
@@ -424,7 +407,6 @@ if (isset($_GET['msg'])) {
     </div>
     <div class="modal-body">
       <div id="modal-err" style="display:none;background:#fff0f0;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#b91c1c;margin-bottom:16px"></div>
-      <!-- Image upload -->
       <div class="form-group">
         <label class="form-label">Image du projet <span style="color:var(--muted);font-weight:400">(optionnel)</span></label>
         <div class="proj-img-upload" id="proj-img-upload" onclick="document.getElementById('proj-img-file').click()">
@@ -459,7 +441,6 @@ if (isset($_GET['msg'])) {
   </div>
 </div>
 
-<!-- ─── STUDENT PROFILE MODAL ─── -->
 <div class="modal-overlay" id="sp-modal" onclick="if(event.target===this)closeStudentProfile()">
   <div class="sp-modal-box">
     <div class="sp-modal-head">
@@ -473,7 +454,6 @@ if (isset($_GET['msg'])) {
   </div>
 </div>
 
-<!-- ─── STORY VIEWER ─── -->
 <div class="story-viewer" id="story-viewer">
   <div class="sv-bg"><img id="sv-bg-img" src="" alt=""></div>
   <div class="sv-progress" id="sv-progress"></div>
@@ -493,7 +473,7 @@ if (isset($_GET['msg'])) {
   <div class="sv-tap-zone sv-tap-right" onclick="storyNext()"></div>
 </div>
 
-<!-- ─── DRAWER ─── -->
+
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="post-drawer">
   <div class="drawer-head">
@@ -507,7 +487,6 @@ if (isset($_GET['msg'])) {
   </div>
 </div>
 
-<!-- ─── MOBILE BOTTOM NAV ─── -->
 <nav class="mobile-nav" id="mobile-nav">
   <button class="mn-btn active" id="mn-home" onclick="mobileTab('projects',this)"><i class="fa-solid fa-flask"></i><span>Projets</span></button>
   <button class="mn-btn" id="mn-announcements" onclick="mobileTab('announcements',this)"><i class="fa-solid fa-bullhorn"></i><span>Annonces<?php if(count($announcements_data)>0): ?> (<?= count($announcements_data) ?>)<?php endif; ?></span></button>
@@ -515,15 +494,13 @@ if (isset($_GET['msg'])) {
   <button class="mn-btn" id="mn-events" onclick="mobileTab('events',this)"><i class="fa-solid fa-calendar-days"></i><span>Événements</span></button>
   <button class="mn-btn" id="mn-university" onclick="mobileTab('university',this)"><i class="fa-solid fa-university"></i><span>Université</span></button>
 </nav>
-
-<!-- ─── MOBILE SEARCH ─── -->
 <div class="mob-search-overlay" id="mob-search-overlay">
   <div class="mob-search-bar">
     <button class="mob-search-back" onclick="closeMobileSearch()"><i class="fa-solid fa-arrow-left"></i></button>
     <div style="position:relative;flex:1">
       <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none"></i>
       <input type="text" id="mob-search-input" placeholder="Rechercher un étudiant…" autocomplete="off"
-        oninput="handleMobSearch(this.value)" style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;background:var(--bg)">
+        oninput="handleMobSearch(this.value)" style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;background:var(--bg)">
     </div>
   </div>
   <div class="mob-search-results" id="mob-search-results">
@@ -531,11 +508,11 @@ if (isset($_GET['msg'])) {
   </div>
 </div>
 
-<!-- ─── TOAST ─── -->
+
 <div class="toast" id="toast"><i class="fa-solid fa-circle-check toast-icon"></i><span id="toast-msg"></span></div>
 
 <script>
-// ─── AES + DATA ───
+
 var _K = CryptoJS.enc.Hex.parse('<?= $AES_KEY_HEX ?>');
 function _aes(obj){var iv=CryptoJS.lib.WordArray.random(16);var enc=CryptoJS.AES.encrypt(JSON.stringify(obj),_K,{iv:iv,mode:CryptoJS.mode.CBC,padding:CryptoJS.pad.Pkcs7});return CryptoJS.enc.Base64.stringify(iv.concat(enc.ciphertext));}
 
@@ -553,7 +530,7 @@ const EVENT_TYPE_ICONS  = {workshop:'fa-screwdriver-wrench',conference:'fa-micro
 
 let currentFilter  = 'all';
 let visibleCount   = 4;
-// Initialize joinedEventIds from is_registered returned by API
+
 let joinedEventIds = new Set(EVENTS.filter(e => e.is_registered).map(e => e.id));
 let currentTab     = 'projects';
 
@@ -569,7 +546,7 @@ function getInitials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').
 function timeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
 function showToast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
-// ─── TABS ───
+
 function switchTab(tab,btn){
   currentTab=tab;
   document.querySelectorAll('.feed-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
@@ -580,7 +557,7 @@ function switchTab(tab,btn){
   if(tab==='university')loadUniversityInfo();
 }
 
-// ─── PROJECTS ───
+
 function getFiltered(){return PROJECTS.filter(p=>currentFilter==='all'||p.category===currentFilter);}
 function renderFeed(){
   const cont=document.getElementById('feed-container');
@@ -605,9 +582,9 @@ function buildProjectCard(p,delay){
   const liked=p._liked||false;
   const likeCount=p._like_count!=null?p._like_count:(p.like_count||0);
   const commentCount=p._comment_count!=null?p._comment_count:(p.comment_count||0);
-  // Project image section — only show if image exists
+
   const imgSection=p.image
-    ?`<div class="pc-img-wrap"><img class="pc-img" src="${p.image}" alt="" loading="lazy" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
+    ?`<div class="pc-img-wrap"><img class="pc-img lb-trigger" src="${p.image}" alt="" loading="lazy" onclick="openLightbox('${p.image.replace(/'/g,"\\'")}','${(p.title||'').replace(/'/g,"\\'")}');" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
     :'';
   const el=document.createElement('div');
   el.className='project-card lk-card';el.style.animationDelay=delay+'ms';el.dataset.projectId=p.id;
@@ -652,14 +629,13 @@ function buildProjectCard(p,delay){
   return el;
 }
 
-// ─── LIKE STATE — use is_liked from API (already returned by GET /projects) ───
-// No localStorage needed — the server already tells us per-user like state
+
 PROJECTS.forEach(p => {
   p._liked      = p.is_liked  ?? false;
   p._like_count = p.like_count ?? 0;
 });
 
-// ─── SECURE AJAX via PHP proxy ───
+
 async function _postAjax(payload){
   const fd=new FormData();
   fd.append('_imadenc',_aes(payload));
@@ -668,7 +644,6 @@ async function _postAjax(payload){
   return r.json();
 }
 
-// ─── LIKE ───
 async function toggleLike(btn, projectId){
   btn.disabled = true;
   try {
@@ -688,7 +663,7 @@ async function toggleLike(btn, projectId){
   }
 }
 
-// ─── COMMENTS ───
+
 const _loadedComments={};
 async function toggleComments(btn,projectId){
   const panel=document.getElementById('cmt-panel-'+projectId);
@@ -755,8 +730,6 @@ async function deleteComment(projectId,commentId){
     }
   }catch(e){showToast('Erreur réseau');}
 }
-
-// ─── FOLLOW (from dashboard modal) ───
 async function toggleFollow(userId,btn){
   try{
     const data=await _postAjax({_action:'toggle_follow',id:userId});
@@ -769,32 +742,28 @@ async function toggleFollow(userId,btn){
   }catch(e){showToast('Erreur réseau');}
 }
 
-// ─── TOP STUDENTS ───
 function renderTopStudents(){
   const list=document.getElementById('top-students-list');
   const counts={};PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;counts[k]=(counts[k]||0)+1;});
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const ownerMap={};PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;ownerMap[k]=p.owner;});
-  // Count my projects by ID
   const myCount=PROJECTS.filter(p=>p.owner.id&&ME.id?p.owner.id===ME.id:(p.owner.firstname===ME.firstname&&p.owner.lastname===ME.lastname)).length;
   document.getElementById('my-proj-count').textContent=myCount;
   if(!sorted.length){list.innerHTML='<div style="padding:12px 18px;font-size:.8rem;color:var(--muted)">Aucun projet encore.</div>';return;}
   list.innerHTML=sorted.map(([k,c],i)=>{const o=ownerMap[k];const av=o.image?`<img src="${o.image}" alt="">`:getInitials(o.firstname,o.lastname);return`<div class="top-student" onclick="window.location.href='profile.php?id=${o.id||''}'"><div class="ts-rank ${i===0?'rank-1':''}">${i+1}</div><div class="ts-av">${av}</div><div class="ts-info"><div class="ts-name">${o.firstname} ${o.lastname}</div><div class="ts-count">${c} projet${c>1?'s':''}</div></div><span class="ts-badge ${i===0?'tb-o':'tb-g'}">${(o.grade||'').split(' ')[0]||'—'}</span></div>`;}).join('');
 }
 
-// ─── ANNOUNCEMENTS ───
 function renderAnnouncements(){
   const cont=document.getElementById('ann-container'),empty=document.getElementById('ann-empty');
   if(!ANNOUNCEMENTS.length){empty.style.display='block';cont.innerHTML='';return;}
   empty.style.display='none';
   cont.innerHTML=[...ANNOUNCEMENTS].sort((a,b)=>(b.is_pinned?1:0)-(a.is_pinned?1:0)).map((a,i)=>{
     const av=a.author?.image?`<img src="${a.author.image}" alt="">`:getInitials(a.author?.firstname||'P',a.author?.lastname||'');
-    const img=a.image?`<img src="${a.image}" class="ann-img" alt="">`:''
+    const img=a.image?`<img src="${a.image}" class="ann-img lb-trigger" alt="" onclick="openLightbox(this.src,'${(a.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">`:''
     return`<div class="ann-card${a.is_pinned?' pinned':''}" style="animation-delay:${i*70}ms">${a.is_pinned?'<div class="ann-pin-bar"></div>':''}<div class="ann-header"><div class="ann-av">${av}</div><div class="ann-author-info"><div class="ann-author-name">${a.author?.firstname||''} ${a.author?.lastname||''}</div><div class="ann-author-meta"><span>Professeur</span><span class="pch-dot"></span><span>${timeAgo(a.created_at)}</span></div></div>${a.is_pinned?'<span class="ann-pin-badge"><i class="fa-solid fa-thumbtack"></i> Épinglée</span>':''}</div><div class="ann-body"><div class="ann-title">${a.title}</div><div class="ann-content">${a.content}</div>${img}</div></div>`;
   }).join('');
 }
 
-// ─── EVENTS ───
 function renderEvents(){
   const cont=document.getElementById('events-container'),empty=document.getElementById('events-empty');
   if(!EVENTS.length){empty.style.display='block';cont.innerHTML='';return;}
@@ -811,7 +780,7 @@ function buildEventCard(e,delay){
   const typeCss=EVENT_TYPE_CSS[e.event_type]||'etype-other';
   const typeIcon=EVENT_TYPE_ICONS[e.event_type]||'fa-calendar-days';
   const joined=joinedEventIds.has(e.id);
-  const imgContent=e.image?`<img src="${e.image}" alt="">`:
+  const imgContent=e.image?`<img src="${e.image}" alt="" class="lb-trigger" onclick="openLightbox(this.src,'${(e.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">`:
     `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--green) 0%,var(--dark) 100%);display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(255,255,255,.25)"><i class="fa-solid ${typeIcon}"></i></div>`;
   const btnHtml=e.is_full&&!joined?`<button class="event-join-btn" disabled>Complet</button>`:joined?`<button class="event-join-btn joined-btn" onclick="_post({_action:'leave_event',id:${e.id}})"><i class="fa-solid fa-check"></i> Inscrit</button>`:`<button class="event-join-btn" onclick="_post({_action:'join_event',id:${e.id}})">S'inscrire</button>`;
   return`<div class="event-card${joined?' joined':''}" style="animation-delay:${delay}ms"><div class="event-img-wrap">${imgContent}<span class="event-type-badge ${typeCss}"><i class="fa-solid ${typeIcon}" style="margin-right:4px"></i>${typeLabel}</span><span class="event-joined-badge"><i class="fa-solid fa-check"></i> Inscrit</span></div><div class="event-body"><div class="event-title">${e.title}</div><div class="event-meta"><div class="event-meta-row"><i class="fa-solid fa-calendar"></i>${dateStr}</div><div class="event-meta-row"><i class="fa-regular fa-clock"></i>${timeStr}</div><div class="event-meta-row"><i class="fa-solid fa-location-dot"></i>${e.location||'—'}</div></div><div class="event-desc">${e.description||''}</div></div><div class="event-footer"><div class="event-capacity"><div class="event-cap-bar"><div class="event-cap-fill ${capClass}" style="width:${Math.min(capPct,100)}%"></div></div><span>${e.registered_count}${e.capacity?'/'+e.capacity:''} inscrits</span></div>${btnHtml}</div></div>`;
@@ -823,7 +792,6 @@ function renderSidebarEvents(){
   el.innerHTML=upcoming.map(e=>{const d=new Date(e.start_at);return`<div class="upcoming-event"><div class="ue-date"><div class="ue-day">${d.getDate()}</div><div class="ue-month">${d.toLocaleDateString('fr-FR',{month:'short'})}</div></div><div class="ue-info"><div class="ue-name">${e.title.length>42?e.title.slice(0,42)+'…':e.title}</div><div class="ue-loc"><i class="fa-solid fa-location-dot" style="margin-right:3px"></i>${e.location||'—'}</div></div></div>`;}).join('');
 }
 
-// ─── SEARCH ───
 let searchTimer=null,currentSearch='';
 function handleSearch(val){currentSearch=val.trim();document.getElementById('search-clear').style.display=currentSearch?'block':'none';if(!currentSearch){closeDropdown();return;}document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>Recherche…</div>`;document.getElementById('search-dropdown').classList.add('open');clearTimeout(searchTimer);searchTimer=setTimeout(()=>doSearch(currentSearch),350);}
 async function doSearch(q){try{const data=await _postAjax({_action:'search',name:q});const dd=document.getElementById('search-dropdown');if(!currentSearch)return;const results=data.results||[];if(!results.length){dd.innerHTML=`<div class="sd-empty">Aucun étudiant trouvé pour "<strong>${q}</strong>"</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);dd.innerHTML=`<div class="sd-section"><div class="sd-label">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onmousedown="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty">Erreur de connexion</div>`;}}
@@ -831,19 +799,17 @@ function openDropdown(){if(currentSearch)document.getElementById('search-dropdow
 function closeDropdown(){document.getElementById('search-dropdown').classList.remove('open');}
 function closeDropdownDelayed(){setTimeout(closeDropdown,200);}
 function clearSearch(){document.getElementById('student-search').value='';currentSearch='';document.getElementById('search-clear').style.display='none';closeDropdown();}
-
-// ─── MOBILE SEARCH ───
 function openMobileSearch(){document.getElementById('mob-search-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>document.getElementById('mob-search-input').focus(),100);}
 function closeMobileSearch(){document.getElementById('mob-search-overlay').classList.remove('open');document.getElementById('mob-search-input').value='';document.getElementById('mob-search-results').innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;document.body.style.overflow='';}
 let mobTimer=null;
 function handleMobSearch(val){const q=val.trim();const res=document.getElementById('mob-search-results');if(!q){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;return;}res.innerHTML=`<div class="sd-empty" style="padding:40px 20px"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i>Recherche…</div>`;clearTimeout(mobTimer);mobTimer=setTimeout(async()=>{try{const data=await _postAjax({_action:'search',name:q});const results=data.results||[];if(!results.length){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Aucun étudiant trouvé</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);res.innerHTML=`<div class="sd-section"><div class="sd-label" style="padding:12px 16px 6px">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onclick="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div style="flex:1"><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Erreur de connexion</div>`;}},350);}
 
-// ─── CREATE PROJECT ───
+
 function openCreateProject(){document.getElementById('create-project-modal').classList.add('open');document.body.style.overflow='hidden';}
 function closeCreateProject(){
   document.getElementById('create-project-modal').classList.remove('open');
   document.body.style.overflow='';
-  // reset image
+
   clearProjImg();
   document.getElementById('proj-title').value='';
   document.getElementById('proj-desc').value='';
@@ -858,7 +824,7 @@ function previewProjImg(input){
   document.getElementById('modal-err').style.display='none';
   const rd=new FileReader();
   rd.onload=function(e){
-    const b64=e.target.result; // full data URL e.g. "data:image/jpeg;base64,..."
+    const b64=e.target.result; 
     document.getElementById('proj-img-b64').value=b64;
     document.getElementById('proj-img-preview').src=b64;
     document.getElementById('proj-img-preview').style.display='block';
@@ -895,14 +861,14 @@ function submitCreateProject(){
   _post(payload);
 }
 
-// ─── STUDENT PROFILE MODAL ───
+
 async function openStudentProfile(id){document.getElementById('sp-modal').classList.add('open');document.body.style.overflow='hidden';document.getElementById('sp-loading').style.display='flex';document.getElementById('sp-content').innerHTML='';try{const data=await _postAjax({_action:'get_user_info',id});document.getElementById('sp-loading').style.display='none';renderStudentProfile(data);}catch(e){document.getElementById('sp-loading').style.display='none';document.getElementById('sp-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 function closeStudentProfile(){document.getElementById('sp-modal').classList.remove('open');document.body.style.overflow='';}
 const GRADE_LABELS={licence:'Licence',master:'Master',doctorat:'Doctorat'};
 const DOMAIN_LABELS={'intelligence artificielle':'Intelligence Artificielle','developpement web':'Développement Web','cyber securite':'Cyber Sécurité','reseaux et telecommunications':'Réseaux & Télécoms','systemes embarques':'Systèmes Embarqués','science des donnees':'Science des Données','genie logiciel':'Génie Logiciel','autre':'Autre'};
 function renderStudentProfile(data){const u=data.user||{};const projects=data.projects||[];const initials=getInitials(u.firstname||'',u.lastname||'');const avatarHtml=u.image?`<img src="${u.image}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:initials;const joinDate=u.created_at?new Date(u.created_at).toLocaleDateString('fr-FR',{year:'numeric',month:'long'}):'—';const owned=projects.filter(p=>p.role==='owner');const followersCount=data.followers_count??u.followers_count??0;const followingCount=data.following_count??u.following_count??0;const isFollowing=data.is_following||false;const isSelf=u.id===ME.id;const followBtn=!isSelf?`<button class="sp-follow-btn${isFollowing?' sp-following':''}" onclick="toggleFollow(${u.id},this)">${isFollowing?'<i class="fa-solid fa-user-check"></i> Abonné':'<i class="fa-solid fa-user-plus"></i> Suivre'}</button>`:'';document.getElementById('sp-content').innerHTML=`<div class="sp-hero"><div class="sp-avatar">${avatarHtml}</div><div class="sp-hero-info"><div class="sp-name">${u.firstname||''} ${u.lastname||''}</div><div class="sp-grade"><i class="fa-solid fa-graduation-cap"></i>${GRADE_LABELS[u.grade]||u.grade||'—'}</div><div class="sp-domain"><i class="fa-solid fa-microchip"></i>${DOMAIN_LABELS[u.domain]||u.domain||'—'}</div>${followBtn}</div></div><div class="sp-stats"><div class="sp-stat"><div class="sp-stat-val">${owned.length}</div><div class="sp-stat-lbl">Projets</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val" id="sp-followers-count">${followersCount}</div><div class="sp-stat-lbl">Abonnés</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val">${followingCount}</div><div class="sp-stat-lbl">Abonnements</div></div></div><div class="sp-info-section">${u.email?`<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-solid fa-envelope"></i></div><div><div class="sp-info-label">Email</div><div class="sp-info-val">${u.email}</div></div></div>`:''}<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-regular fa-calendar"></i></div><div><div class="sp-info-label">Membre depuis</div><div class="sp-info-val">${joinDate}</div></div></div></div>${projects.length?`<div class="sp-projects-section"><div class="sp-section-title"><i class="fa-solid fa-flask" style="color:var(--green)"></i>Projets (${projects.length})</div>${projects.map(p=>{const catClass=CAT_CLASS[p.category]||'cat-other';const catLabel=CAT_LABEL[p.category]||p.category;const isOwner=p.role==='owner';return`<div class="sp-project-card"><div class="sp-proj-top"><span class="pc-cat-badge ${catClass}">${catLabel}</span>${isOwner?`<span class="sp-owner-badge"><i class="fa-solid fa-crown"></i> Créateur</span>`:`<span class="sp-contrib-badge"><i class="fa-solid fa-users"></i> Contributeur</span>`}</div><div class="sp-proj-title">${p.title}</div>${p.description?`<div class="sp-proj-desc">${p.description}</div>`:''}</div>`;}).join('')}</div>`:`<div class="sp-no-projects"><i class="fa-solid fa-flask"></i><span>Aucun projet pour l'instant</span></div>`}`;}
 
-// ─── UNIVERSITY ───
+
 let uniLoaded=false,uniPosts=[];
 async function loadUniversityInfo(){if(uniLoaded)return;document.getElementById('uni-loading').style.display='block';document.getElementById('uni-posts-list').innerHTML='';try{const data=await _postAjax({_action:'get_uni_posts'});uniLoaded=true;uniPosts=data.posts||[];document.getElementById('uni-loading').style.display='none';if(!uniPosts.length){document.getElementById('uni-posts-list').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-university"></i></div><div class="es-title">Aucune actualité</div></div>`;return;}document.getElementById('uni-posts-list').innerHTML=uniPosts.map((p,i)=>{
   const imgHtml=p.image
@@ -911,11 +877,11 @@ async function loadUniversityInfo(){if(uniLoaded)return;document.getElementById(
   return`<div class="uni-post-item" style="animation-delay:${i*70}ms" onclick="openPostDrawer(${p.id},'${p.title.replace(/'/g,"\\'")}'">${imgHtml}<div class="uni-post-body"><div class="uni-post-header"><span class="uni-post-badge"><i class="fa-solid fa-university"></i> UHBC</span><span class="uni-post-date-badge"><i class="fa-regular fa-calendar"></i>${p.date}</span></div><div class="uni-post-title">${p.title}</div></div><div class="uni-post-footer"><span class="uni-post-read-btn"><i class="fa-solid fa-book-open"></i> Lire <i class="fa-solid fa-chevron-right" style="font-size:.6rem"></i></span></div></div>`;
 }).join('');}catch(e){document.getElementById('uni-loading').style.display='none';document.getElementById('uni-posts-list').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 
-// ─── DRAWER ───
-async function openPostDrawer(id,title){document.getElementById('drawer-title').textContent='Actualité';document.getElementById('drawer-content').style.display='none';document.getElementById('drawer-loading').style.display='flex';document.getElementById('drawer-overlay').classList.add('open');document.getElementById('post-drawer').classList.add('open');document.body.style.overflow='hidden';try{const data=await _postAjax({_action:'get_uni_post',id});document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';let html='';if(data.text)html+=`<div class="drawer-text">${data.text}</div>`;if(data.images?.length){html+=`<div class="drawer-imgs-title"><i class="fa-solid fa-images" style="color:var(--green)"></i> Photos (${data.images.length})</div><div class="drawer-img-grid">`;data.images.forEach(src=>{html+=`<img src="${src}" alt="" loading="lazy" onclick="window.open('${src}','_blank')" onerror="this.style.display='none'">`});html+=`</div>`;}if(data.pdf?.length){data.pdf.forEach((url,i)=>{const name=url.split('/').pop()||`document-${i+1}.pdf`;html+=`<div class="drawer-pdf-viewer"><div class="drawer-pdf-viewer-header"><div style="display:flex;align-items:center;gap:8px"><div class="drawer-pdf-icon"><i class="fa-solid fa-file-pdf"></i></div><div style="font-size:.82rem;font-weight:700;color:var(--text)">${name}</div></div><a href="${url}" target="_blank" rel="noopener" class="drawer-pdf-open-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a></div><iframe src="${url}" class="drawer-pdf-iframe" title="${name}"></iframe></div>`;});}if(!data.text&&!data.images?.length&&!data.pdf?.length)html=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-file-circle-question"></i></div><div class="es-title">Contenu indisponible</div></div>`;document.getElementById('drawer-content').innerHTML=html;}catch(e){document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';document.getElementById('drawer-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
+
+async function openPostDrawer(id,title){document.getElementById('drawer-title').textContent='Actualité';document.getElementById('drawer-content').style.display='none';document.getElementById('drawer-loading').style.display='flex';document.getElementById('drawer-overlay').classList.add('open');document.getElementById('post-drawer').classList.add('open');document.body.style.overflow='hidden';try{const data=await _postAjax({_action:'get_uni_post',id});document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';let html='';if(data.text)html+=`<div class="drawer-text">${data.text}</div>`;if(data.images?.length){html+=`<div class="drawer-imgs-title"><i class="fa-solid fa-images" style="color:var(--green)"></i> Photos (${data.images.length})</div><div class="drawer-img-grid">`;data.images.forEach(src=>{html+=`<img src="${src}" alt="" loading="lazy" class="lb-trigger" onclick="openLightbox(this.src,'')" onerror="this.style.display='none'">`});html+=`</div>`;}if(data.pdf?.length){data.pdf.forEach((url,i)=>{const name=url.split('/').pop()||`document-${i+1}.pdf`;html+=`<div class="drawer-pdf-viewer"><div class="drawer-pdf-viewer-header"><div style="display:flex;align-items:center;gap:8px"><div class="drawer-pdf-icon"><i class="fa-solid fa-file-pdf"></i></div><div style="font-size:.82rem;font-weight:700;color:var(--text)">${name}</div></div><a href="${url}" target="_blank" rel="noopener" class="drawer-pdf-open-btn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir</a></div><iframe src="${url}" class="drawer-pdf-iframe" title="${name}"></iframe></div>`;});}if(!data.text&&!data.images?.length&&!data.pdf?.length)html=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-file-circle-question"></i></div><div class="es-title">Contenu indisponible</div></div>`;document.getElementById('drawer-content').innerHTML=html;}catch(e){document.getElementById('drawer-loading').style.display='none';document.getElementById('drawer-content').style.display='block';document.getElementById('drawer-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
 function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('post-drawer').classList.remove('open');document.body.style.overflow='';}
 
-// ─── STORY VIEWER ───
+
 let storyItems=[],storyCurrent=0,storyTimer=null;const STORY_DURATION=5000;
 function openStoryViewer(i){storyCurrent=i;document.getElementById('story-viewer').classList.add('open');document.body.style.overflow='hidden';renderStory(i);startStoryTimer();}
 function closeStoryViewer(){clearTimeout(storyTimer);document.getElementById('story-viewer').classList.remove('open');document.body.style.overflow='';}
@@ -924,10 +890,10 @@ function startStoryTimer(){clearTimeout(storyTimer);const fill=document.getEleme
 function storyNext(){clearTimeout(storyTimer);if(storyCurrent<storyItems.length-1){storyCurrent++;renderStory(storyCurrent);startStoryTimer();}else closeStoryViewer();}
 function storyPrev(){clearTimeout(storyTimer);if(storyCurrent>0){storyCurrent--;renderStory(storyCurrent);startStoryTimer();}}
 
-// ─── MOBILE TABS ───
+
 function mobileTab(tab,btn){document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');currentTab=tab;if(tab==='events')renderEvents();if(tab==='announcements')renderAnnouncements();if(tab==='university')loadUniversityInfo();window.scrollTo({top:0,behavior:'smooth'});}
 
-// ─── INIT ───
+
 window.addEventListener('DOMContentLoaded', () => {
   renderFeed();
   renderTopStudents();
@@ -938,8 +904,37 @@ window.addEventListener('DOMContentLoaded', () => {
   <?php if($page_toast): ?>showToast(<?= json_encode($page_toast) ?>);<?php endif; ?>
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCreateProject(); closeDrawer(); closeStoryViewer(); closeStudentProfile(); }
+  if (e.key === 'Escape') { closeCreateProject(); closeDrawer(); closeStoryViewer(); closeStudentProfile(); closeLightbox(); }
+});
+
+
+function openLightbox(src, caption) {
+  const lb = document.getElementById('photo-lightbox');
+  const img = document.getElementById('lb-img');
+  const cap = document.getElementById('lb-caption');
+  img.src = src;
+  cap.textContent = caption || '';
+  lb.classList.add('lb-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  const lb = document.getElementById('photo-lightbox');
+  lb.classList.remove('lb-open');
+  document.body.style.overflow = '';
+  setTimeout(() => { document.getElementById('lb-img').src = ''; }, 300);
+}
+document.getElementById('photo-lightbox').addEventListener('click', function(e) {
+  if (e.target === this || e.target.id === 'lb-img-wrap') closeLightbox();
 });
 </script>
+
+
+<div id="photo-lightbox">
+  <div id="lb-img-wrap">
+    <img id="lb-img" src="" alt="">
+  </div>
+  <button id="lb-close" onclick="closeLightbox()" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+  <div id="lb-caption"></div>
+</div>
 </body>
 </html>

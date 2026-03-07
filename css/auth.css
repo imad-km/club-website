@@ -6,7 +6,7 @@
 .auth-body {
   min-height: 100vh;
   display: flex;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   background: var(--fog);
 }
 
@@ -49,7 +49,7 @@
   object-fit: cover; border: 1px solid rgba(255,255,255,.12);
 }
 .panel-logo-txt {
-  font-family: 'Libre Baskerville', serif;
+  font-family: 'DM Serif Display', Georgia, serif;
   font-size: 15px; color: #fff; line-height: 1.3;
 }
 .panel-logo-sub {
@@ -61,7 +61,7 @@
   animation: fadeUp .8s cubic-bezier(.16,1,.3,1) .12s both;
 }
 .panel-copy h1 {
-  font-family: 'Libre Baskerville', serif;
+  font-family: 'DM Serif Display', Georgia, serif;
   font-size: 44px; line-height: 1.1; color: #fff; margin-bottom: 20px;
 }
 .panel-copy h1 span { color: var(--green2); }
@@ -94,7 +94,7 @@
 }
 .auth-form-box { width: 100%; max-width: 420px; }
 .auth-form-box h2 {
-  font-family: 'Libre Baskerville', serif;
+  font-family: 'DM Serif Display', Georgia, serif;
   font-size: 30px; color: var(--txt); margin-bottom: 6px;
   animation: fadeRight .65s cubic-bezier(.16,1,.3,1) .08s both;
 }
@@ -108,6 +108,7 @@
 .auth-field:nth-of-type(1){animation-delay:.22s}
 .auth-field:nth-of-type(2){animation-delay:.30s}
 .auth-field label {
+  font-family:'JetBrains Mono',monospace;
   display: block; font-size: 11px; font-weight: 600;
   letter-spacing: .1em; text-transform: uppercase;
   color: var(--txt); margin-bottom: 9px;
@@ -115,7 +116,7 @@
 .auth-field input {
   width: 100%; padding: 13px 16px;
   border: 1.5px solid var(--line); border-radius: 8px;
-  font-size: 15px; font-family: 'Sora', sans-serif;
+  font-size: 15px; font-family: 'DM Sans', system-ui, sans-serif;
   color: var(--txt); background: #fff; outline: none;
   transition: border .2s, box-shadow .2s, transform .15s;
 }
@@ -145,7 +146,7 @@
 .auth-btn {
   width: 100%; padding: 15px; border: none; border-radius: 8px;
   background: var(--dark); color: #fff;
-  font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600;
   letter-spacing: .03em; cursor: pointer; transition: all .25s;
   margin-top: 8px;
   animation: scalePop .5s cubic-bezier(.16,1,.3,1) .38s both;
@@ -190,7 +191,7 @@
 
 /* ─── REGISTER CARD (centered, no side panel) ─── */
 .register-body {
-  min-height: 100vh; font-family: 'Sora', sans-serif;
+  min-height: 100vh; font-family: 'DM Sans', system-ui, sans-serif;
   background: var(--fog);
   display: flex; align-items: flex-start;
   justify-content: center; padding: 48px 16px;
@@ -223,7 +224,7 @@
   animation:headIn .6s cubic-bezier(.16,1,.3,1) .1s both;
 }
 .reg-head h1 {
-  font-family:'Libre Baskerville',serif;font-size:24px;color:#fff;
+  font-family:'DM Serif Display',Georgia,serif;font-size:24px;color:#fff;
   position:relative;z-index:1;margin-bottom:4px;
   animation:headIn .6s cubic-bezier(.16,1,.3,1) .28s both;
 }
@@ -236,13 +237,14 @@
 .reg-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .reg-field { margin-bottom: 18px; animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both; }
 .reg-field label {
+  font-family:'JetBrains Mono',monospace;
   display:block;font-size:11px;font-weight:600;
   letter-spacing:.1em;text-transform:uppercase;color:var(--txt);margin-bottom:8px;
 }
 .reg-field input, .reg-field select {
   width:100%;padding:12px 15px;
   border:1.5px solid var(--line);border-radius:8px;
-  font-size:14px;font-family:'Sora',sans-serif;
+  font-size:14px;font-family:'DM Sans',system-ui,sans-serif;
   color:var(--txt);background:var(--fog);
   outline:none;transition:border .2s,box-shadow .2s,transform .15s;
   appearance:none;-webkit-appearance:none;
@@ -285,7 +287,7 @@
 .otp-inputs { display:flex; gap:10px; justify-content:center; margin:24px 0; }
 .otp-input {
   width:52px;height:58px;text-align:center;
-  font-size:22px;font-weight:700;font-family:'Sora',sans-serif;
+  font-size:22px;font-weight:700;font-family:'DM Sans',system-ui,sans-serif;
   border:2px solid var(--line);border-radius:10px;
   color:var(--txt);background:#fff;outline:none;
   transition:border .2s,box-shadow .2s;
