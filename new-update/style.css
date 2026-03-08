@@ -11,18 +11,8 @@
     --white: ;
     --border: rgba(26, 122, 74, .15);
 
-    --font-main:
-        "Bevan", serif;
-    font-weight: 400;
-    font-style: normal;
-
-
-
-
-    --font-title: "Bevan", serif;
-    font-weight: 400;
-    font-style: italic;
-    ;
+    --font-main: 'Plus Jakarta Sans', sans-serif;
+    --font-title: 'Fraunces', serif;
 }
 
 * {
@@ -396,7 +386,7 @@ nav::before {
 
 
 .hero-title {
-    font-family: var(--font-title) bold;
+    font-family: var(--font-title);
     font-weight: 900;
     font-size: clamp(2rem, 5vw, 3.8rem);
     line-height: 1.05;
@@ -408,14 +398,11 @@ nav::before {
 }
 
 .hero-title .ht-g {
-    color: var(--green-l);
-    font-weight: bold;
+    color: var(--green-l)
 }
 
 .hero-title .ht-o {
-    color: var(--orange-l);
-        font-weight: bold;
-
+    color: var(--orange-l)
 }
 
 .hero-sub {
@@ -943,10 +930,6 @@ nav::before {
     inset: 0;
     background: rgba(249, 253, 249, .72);
     backdrop-filter: blur(3px)
-}
-
-.unlocked-li::after {
-    display: none
 }
 
 .li-icon {

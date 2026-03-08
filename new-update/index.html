@@ -1,0 +1,1144 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI House UHBC — Maison de l'Intelligence Artificielle</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,700&amp;family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body style="direction: ltr;">
+    <canvas id="ai-bg" width="761" height="666"></canvas>
+    <!-- ═══ NAV ═══ -->
+    <nav id="main-nav">
+        <a class="nav-logo-left" onclick="goHome()">
+            <img src="images/universit_hassiba_ben_bouali_chlef_logo-removebg-preview.png" alt="UHBC">
+        </a>
+        <ul class="nav-center" id="nav-pub">
+            <li><a href="#Home" data-i18n="accueil">Accueil</a></li>
+            <li><a href="#pillars" data-i18n="piliers">Piliers</a></li>
+            <li><a href="#locked" data-i18n="projets_evenements">Projets &amp; Événements</a></li>
+            <li><a href="#about" data-i18n="a_propos">À propos</a></li>
+            <li><a href="#Contact" data-i18n="contact">Contact</a></li>
+        </ul>
+        <ul class="nav-center" id="nav-mem" style="display:none">
+            <li><a onclick="showTab('t-overview')" data-i18n="dashboard">Dashboard</a></li>
+            <li><a onclick="showTab('t-projects')" data-i18n="projets">Projets</a></li>
+            <li><a onclick="showTab('t-events')" data-i18n="evenements">Événements</a></li>
+            <li><a onclick="showTab('t-activities')" data-i18n="activites">Activités</a></li>
+        </ul>
+        <div class="nav-right">
+            <div class="logo-join">
+                <div id="nav-guest" style="display:flex;align-items:center;gap:14px">
+                    <button class="btn-join-nav" onclick="openModal()" data-i18n="join_us"> Join Us →</button>
+                </div>
+                <div id="nav-logged" style="display:none;align-items:center;gap:14px">
+                    <span class="member-badge">
+                        <div class="member-avatar" id="nav-av" data-i18n="km">KM</div>
+                        <span id="nav-nm" data-i18n="khalil">Khalil</span>
+                    </span>
+                </div>
+
+                <img class="nav-univ-logo" src="https://i.imgur.com/zl5jHaY.png" alt="AI House UHBC">
+            </div>
+
+            <!-- ═══ translate ═══ -->
+
+            <div class="lang-switcher">
+
+                <button class="lang-btn" id="langToggle">
+                    <i class="fa-solid fa-globe"></i>
+                </button>
+
+                <div class="lang-menu" id="langMenu" style="display: none;">
+
+                    <button onclick="setLang('fr')" data-i18n="fr">FR</button>
+
+                    <button onclick="setLang('en')" data-i18n="en">EN</button>
+
+                    <button onclick="setLang('ar')" data-i18n="ar">AR</button>
+
+                </div>
+
+            </div>
+
+
+        </div>
+    </nav>
+
+    <!-- ═══ PAGE 1 ═══ -->
+    <div id="Home" class="page active">
+
+        <!-- HERO -->
+        <section id="hero">
+            <div class="hero-bg" id="hero-bg" style="transform: scale(1.02904) translateY(12.9px);"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-grain"></div>
+            <div id="particles-hero" style="position:absolute;inset:0;z-index:1;pointer-events:none"><canvas
+                    class="particles-js-canvas-el"
+                    style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;" width="746"
+                    height="533"></canvas><canvas class="particles-js-canvas-el"
+                    style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;" width="746"
+                    height="533"></canvas></div>
+
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot" data-i18n="univ"></span>
+                    Université Hassiba Benbouali de Chlef
+                </div>
+
+                <h1 class="hero-title">
+                    <span data-i18n="maison_de">Maison de</span><br>
+                    <span class="accent">l'</span><span class="ht-g" data-i18n="intelligence">Intelligence</span><br>
+                    <span class="ht-o" data-i18n="artificielle">Artificielle</span>
+                </h1>
+
+                <p class="hero-sub" data-i18n="un_espace_physique_et_virtuel_dedie_a_le">
+                    Un espace physique et virtuel dédié à l'exploration, la recherche et l'innovation en IA —
+                    au service des étudiants, chercheurs et partenaires industriels.
+                </p>
+
+                <div class="hero-actions">
+                    <button class="btn-hero-primary" onclick="openModal()" data-i18n="rejoindre_la_communaute">Rejoindre
+                        la communauté</button>
+                    <a href="#pillars" class="btn-hero-secondary" data-i18n="decouvrir_nos_piliers">Découvrir nos
+                        piliers</a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="hs-item">
+                        <div class="hs-val"><span class="sg" data-i18n="40">40+</span></div>
+                        <div class="hs-label" data-i18n="projets_actifs">Projets actifs</div>
+                    </div>
+                    <div class="hs-item">
+                        <div class="hs-val"><span class="so" data-i18n="120">120</span></div>
+                        <div class="hs-label" data-i18n="membres">Membres</div>
+                    </div>
+                    <div class="hs-item">
+                        <div class="hs-val" data-i18n="18">18</div>
+                        <div class="hs-label" data-i18n="evenements_an">Événements / an</div>
+                    </div>
+                    <div class="hs-item">
+                        <div class="hs-val"><span class="sg">4</span></div>
+                        <div class="hs-label" data-i18n="piliers_fondateurs">Piliers fondateurs</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-scroll">
+                <div class="scroll-line"></div>
+                <span data-i18n="defiler">Défiler</span>
+            </div>
+        </section>
+
+        <!-- PILLARS -->
+        <section id="pillars">
+            <div class="sec-head">
+                <div>
+
+                    <div class="sl sl-g reveal visible" data-i18n="ce_qui_nous_definit">
+                        Ce qui nous définit
+                    </div>
+
+                    <h2 class="st reveal delay-1 visible" style="color:var(--dark)">
+
+                        <span data-i18n="les_4_piliers_de">Les 4 piliers de</span>
+
+                        <span class="green" data-i18n="lai_house">
+                            l'AI HOUSE
+                        </span>
+
+                    </h2>
+
+                </div>
+                <p class="pillars-desc reveal-right visible" data-i18n="notre_mission_repose_sur_quatre_axes_fon">Notre
+                    mission repose sur quatre axes fondamentaux qui guident
+                    chaque initiative, projet et partenariat.</p>
+            </div>
+            <div class="pillars-grid">
+                <div class="pillar-card reveal delay-1 visible">
+                    <div class="p-icon pig" data-i18n="text">🔬</div>
+                    <div class="p-name" data-i18n="recherche">Recherche</div>
+                    <p class="p-desc" data-i18n="conduire_des_travaux_avances_et_publier_">Conduire des travaux avancés
+                        et publier dans les domaines prioritaires de l'IA.
+                    </p>
+                    <div class="p-num"></div>
+                </div>
+                <div class="pillar-card reveal delay-2 visible">
+                    <div class="p-icon pio" data-i18n="text_1">📚</div>
+                    <div class="p-name" data-i18n="education">Education</div>
+                    <p class="p-desc" data-i18n="ateliers_bootcamps_et_formations_continu">Ateliers, bootcamps et
+                        formations continues pour développer les compétences IA.
+                    </p>
+                    <div class="p-num"></div>
+                </div>
+                <div class="pillar-card reveal delay-3 visible">
+                    <div class="p-icon pib" data-i18n="text_2">⚖️</div>
+                    <div class="p-name" data-i18n="ethique">Éthique</div>
+                    <p class="p-desc" data-i18n="promouvoir_une_ia_responsable_transparen">Promouvoir une IA
+                        responsable, transparente et inclusive.</p>
+                    <div class="p-num"></div>
+                </div>
+                <div class="pillar-card reveal delay-4 visible">
+                    <div class="p-icon pip" data-i18n="text_3">💡</div>
+                    <div class="p-name" data-i18n="innovation">Innovation</div>
+                    <p class="p-desc" data-i18n="incuber_des_startups_et_connecter_la_rec">Incuber des startups et
+                        connecter la recherche à l'industrie.</p>
+                    <div class="p-num"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOCKED PREVIEW -->
+        <section id="locked">
+            <div class="lp-head">
+                <div class="sl sl-o reveal visible" style="display:block" data-i18n="contenu_exclusif_membres">Contenu
+                    exclusif membres</div>
+                <h2 class="st reveal delay-1 visible" style="color:var(--dark)"
+                    data-i18n="projets_evenements_activites">Projets, Événements &amp; Activités</h2>
+                <p class="reveal delay-2 visible" data-i18n="rejoignez_la_communaute_ai_house_pour_ac">Rejoignez la
+                    communauté AI HOUSE pour accéder aux projets de recherche,
+                    événements et ressources exclusives.</p>
+            </div>
+            <div class="lock-grid">
+                <div class="ls reveal-left visible">
+                    <div class="ls-header">
+                        <div class="lsh-l">
+                            <div class="lsh-icon lsh-g" data-i18n="text_4">🧪</div>
+                            <div>
+                                <div class="lsh-title" data-i18n="projets_de_recherche">Projets de Recherche</div>
+                                <div class="lsh-count" data-i18n="8_projets_actifs">8 projets actifs</div>
+                            </div>
+                        </div>
+                        <div class="lock-badge" data-i18n="membres_seulement">🔒 Membres seulement</div>
+                    </div>
+                    <div class="lock-items">
+                        <div class="li">
+                            <div class="li-icon lig" data-i18n="text_5">🧠</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="resume_automatique_en_arabe">Résumé automatique en
+                                    arabe</div>
+                                <div class="li-sub" data-i18n="nlp_master_2_ouvert">NLP · Master 2 · Ouvert</div>
+                            </div><span class="li-lock" data-i18n="text_6">🔒</span>
+                        </div>
+                        <div class="li">
+                            <div class="li-icon lio" data-i18n="text_7">👁️</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="detection_maladies_agricoles">Détection maladies
+                                    agricoles</div>
+                                <div class="li-sub" data-i18n="vision_doctorat_ouvert">Vision · Doctorat · Ouvert</div>
+                            </div><span class="li-lock" data-i18n="text_8">🔒</span>
+                        </div>
+                        <div class="li">
+                            <div class="li-icon lib" data-i18n="text_9">📊</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="prediction_reussite_etudiante">Prédiction réussite
+                                    étudiante</div>
+                                <div class="li-sub" data-i18n="ml_master_1_complet">ML · Master 1 · Complet</div>
+                            </div><span class="li-lock" data-i18n="text_10">🔒</span>
+                        </div>
+                    </div>
+                    <div class="ls-cta ls-cta-g">
+                        <p data-i18n="accedez_a_tous_les_projets_et_postulez">👉 Accédez à tous les projets et postulez
+                        </p><button class="btn-unlock btu-g" onclick="openModal()" data-i18n="join">Join →</button>
+                    </div>
+                </div>
+                <div class="ls reveal-right visible">
+                    <div class="ls-header">
+                        <div class="lsh-l">
+                            <div class="lsh-icon lsh-o" data-i18n="text_11">📅</div>
+                            <div>
+                                <div class="lsh-title" data-i18n="evenements_formations">Événements &amp; Formations
+                                </div>
+                                <div class="lsh-count" data-i18n="4_evenements_ce_mois">4 événements ce mois</div>
+                            </div>
+                        </div>
+                        <div class="lock-badge" data-i18n="membres_seulement_1">🔒 Membres seulement</div>
+                    </div>
+                    <div class="lock-items">
+                        <div class="li">
+                            <div class="li-icon lio" data-i18n="text_12">🛠️</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="workshop_deep_learning">Workshop Deep Learning</div>
+                                <div class="li-sub" data-i18n="10_mars_salle_204">10 Mars · Salle 204</div>
+                            </div><span class="li-lock" data-i18n="text_13">🔒</span>
+                        </div>
+                        <div class="li">
+                            <div class="li-icon lig" data-i18n="text_14">🎤</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="conference_ia_ethique">Conférence IA &amp; Éthique
+                                </div>
+                                <div class="li-sub" data-i18n="17_mars_amphi_principal">17 Mars · Amphi Principal</div>
+                            </div><span class="li-lock" data-i18n="text_15">🔒</span>
+                        </div>
+                        <div class="li">
+                            <div class="li-icon lio">⚡</div>
+                            <div class="li-info">
+                                <div class="li-title" data-i18n="hackathon_ia_24h">Hackathon IA — 24h</div>
+                                <div class="li-sub" data-i18n="24_mars_espace_innovation">24 Mars · Espace Innovation
+                                </div>
+                            </div><span class="li-lock" data-i18n="text_16">🔒</span>
+                        </div>
+                    </div>
+                    <div class="ls-cta ls-cta-o">
+                        <p data-i18n="inscrivezvous_aux_evenements">👉 Inscrivez-vous aux événements</p><button
+                            class="btn-unlock btu-o" onclick="openModal()" data-i18n="join_1">Join →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about">
+            <div class="about-visual reveal-left visible">
+                <div class="about-img-wrap">
+                    <img src="images/rectorat_final.jpg" alt="UHBC Campus">
+                </div>
+                <div class="about-badge">
+                    <div class="ab-val" data-i18n="2024">2024</div>
+                    <div class="ab-label" data-i18n="fondee">Fondée</div>
+                </div>
+            </div>
+            <div class="about-info">
+                <span class="sl sl-gd reveal visible" data-i18n="a_propos_de_la_mia">À propos de la MIA</span>
+                <h2 class="st reveal delay-1 visible" style="color:var(--dark)"
+                    data-i18n="un_ecosysteme_ia_au_cur_de_luniversite">Un écosystème IA au cœur de l'université</h2>
+                <p class="reveal delay-2 visible" data-i18n="a_propos_mia">La Maison de l'IA
+                    (MIA) est une initiative de l'Université Hassiba Benbouali
+                    de Chlef visant à créer un hub d'excellence en intelligence artificielle, réunissant étudiants,
+                    chercheurs et partenaires industriels autour de projets concrets.</p>
+                <p class="reveal delay-3 visible" data-i18n="mission_mia">Notre mission :
+                    démocratiser l'IA en Algérie, former les talents de demain et
+                    produire une recherche de qualité internationale.</p>
+                <div class="about-chips reveal delay-4 visible">
+                    <span class="achip achip-g" data-i18n="recherche_appliquee">🔬 Recherche appliquée</span>
+                    <span class="achip achip-o" data-i18n="formation_continue">🎓 Formation continue</span>
+                    <span class="achip achip-g" data-i18n="partenariats_industriels">🤝 Partenariats industriels</span>
+                    <span class="achip achip-o" data-i18n="rayonnement_international">🌍 Rayonnement
+                        international</span>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-logo">
+                    <img src="https://i.imgur.com/zl5jHaY.png" alt="AI House UHBC">
+                </div>
+                <span class="footer-copy" data-i18n="2026_maison_de_lia_universite_hassiba_be">© 2026 Maison de l'IA —
+                    Université Hassiba Benbouali de Chlef</span>
+                <div class="footer-soc" data-i18n="anne_1">
+                    <p class="soc-link">2</p>
+                    <p class="soc-link">0</p>
+                    <p class="soc-link">2</p>
+                    <p class="soc-link">6</p>
+                </div>
+            </div>
+        </footer>
+
+
+
+
+        <footer id="Contact" class="footer">
+
+            <div class="footer-container">
+
+                <div class="footer-box">
+                    <h3 data-i18n="maison_de_ai">Maison de AI</h3>
+                    <p data-i18n="maison_de_ai_est_une_communaute_pour_les">Maison de AI est une communauté pour les
+                        étudiants passionnés par l'intelligence artificielle,
+                        l'innovation et
+
+                        la technologie.</p>
+                </div>
+
+                <div class="footer-box">
+                    <h3 data-i18n="quick_links">Quick Links</h3>
+                    <a href="#" data-i18n="profile">Profile</a>
+                    <a href="#" data-i18n="projects">Projects</a>
+                    <a href="#" data-i18n="events">Events</a>
+                    <a href="#" data-i18n="activites_1">Activites</a>
+                </div>
+
+                <div class="footer-box">
+                    <h3 data-i18n="resources">Resources</h3>
+                    <a href="#" data-i18n="dataset_arabic_nlp">Dataset Arabic NLP</a>
+                    <a href="#" data-i18n="pytorch_notebooks">PyTorch Notebooks</a>
+                    <a href="#" data-i18n="gpu_cloud_access">GPU Cloud Access</a>
+                    <a href="#" data-i18n="ai_library">AI Library</a>
+                    <a href="#" data-i18n="uhbc_online_courses">UHBC Online Courses</a>
+                    <a href="#" data-i18n="partner_network">Partner Network</a>
+                </div>
+
+                <div class="footer-box">
+                    <h3 data-i18n="contact_us">Contact Us</h3>
+                    <div class="footer-social">
+                        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/fsei.uhbc"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="univ-chlef.dz/fsei"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom" data-i18n="artificielle_1">© 2026 Maison de l'IA — Université Hassiba Benbouali
+                de Chlef</div>
+
+        </footer>
+
+
+    </div><!-- /page1 -->
+
+    <!-- ═══ PAGE 2 — DASHBOARD ═══ -->
+    <div id="page2" class="page">
+        <div class="dash-layout">
+            <aside class="sidebar">
+                <div class="sb-sec">
+                    <div class="sb-lbl" data-i18n="principal">Principal</div>
+                    <div class="sb-link active" onclick="showTab('t-overview')"><span class="sb-icon"
+                            data-i18n="text_17">🏠</span> Tableau
+                        de bord</div>
+                    <div class="sb-link" onclick="showTab('t-projects')"><span class="sb-icon"
+                            data-i18n="text_18">🧪</span> Projets <span class="sb-badge">8</span></div>
+                    <div class="sb-link" onclick="showTab('t-events')"><span class="sb-icon"
+                            data-i18n="text_19">📅</span> Événements <span class="sb-badge">4</span></div>
+                    <div class="sb-link" onclick="showTab('t-activities')"><span class="sb-icon">⚡</span> Activités
+                    </div>
+                </div>
+                <div class="sb-sec">
+                    <div class="sb-lbl" data-i18n="mon_espace">Mon espace</div>
+                    <div class="sb-link" onclick="showTab('t-profile')"><span class="sb-icon"
+                            data-i18n="text_20">👤</span> Mon profil</div>
+                    <div class="sb-link" onclick="showTab('t-resources')"><span class="sb-icon"
+                            data-i18n="text_21">📚</span> Ressources
+                    </div>
+                </div>
+                <div class="sb-profile">
+                    <div class="sbp-inner">
+                        <div class="sbp-av" id="sb-av" data-i18n="km_1">KM</div>
+                        <div>
+                            <div class="sbp-name" id="sb-name" data-i18n="khalil_m">Khalil M.</div>
+                            <div class="sbp-role" id="sb-role" data-i18n="etudiant_master">Étudiant Master</div>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()" data-i18n="deconnexion">← Déconnexion</button>
+                </div>
+            </aside>
+
+            <main class="dash-main">
+
+                <!-- OVERVIEW -->
+                <div class="dtab active" id="t-overview">
+                    <div class="wb">
+                        <div>
+                            <h1>Bonjour, <span id="wn" style="color:var(--green)" data-i18n="khalil_1">Khalil</span> 👋
+                            </h1>
+                            <p data-i18n="bienvenue_dans_votre_espace_ai_house_uhb">Bienvenue dans votre espace AI HOUSE
+                                UHBC</p>
+                        </div>
+                        <div class="wb-date" data-i18n="mars_2025">📅 Mars 2025</div>
+                    </div>
+                    <div class="kpi-row">
+                        <div class="kpi">
+                            <div class="kpi-ic pig" data-i18n="text_22">🧪</div>
+                            <div class="kpi-v">3</div>
+                            <div class="kpi-l" data-i18n="projets_rejoints">Projets rejoints</div>
+                            <div class="kpi-t tu" data-i18n="1_ce_mois">↑ +1 ce mois</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-ic pio" data-i18n="text_23">📅</div>
+                            <div class="kpi-v">2</div>
+                            <div class="kpi-l" data-i18n="evenements_inscrits">Événements inscrits</div>
+                            <div class="kpi-t tu" data-i18n="prochain_10_mars">Prochain: 10 mars</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-ic" style="background:#e8f0ff">⚡</div>
+                            <div class="kpi-v" data-i18n="14">14</div>
+                            <div class="kpi-l" data-i18n="activites_totales">Activités totales</div>
+                            <div class="kpi-t tn" data-i18n="derniere_hier">Dernière: hier</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-ic pip" data-i18n="text_24">🏆</div>
+                            <div class="kpi-v" data-i18n="gold">Gold</div>
+                            <div class="kpi-l" data-i18n="niveau_membre">Niveau membre</div>
+                            <div class="kpi-t tu" data-i18n="3_mois_actif">↑ 3 mois actif</div>
+                        </div>
+                    </div>
+                    <div class="sh">
+                        <h2 data-i18n="mes_projets_recents">Mes projets récents</h2><button class="sh-a"
+                            onclick="showTab('t-projects')" data-i18n="voir_tout">Voir tout
+                            →</button>
+                    </div>
+                    <div class="proj-grid">
+                        <div class="pc">
+                            <div class="pc-img pci-g">🧠<span class="pc-tag tg" data-i18n="nlp">NLP</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="resume_automatique_en_arabe_1">Résumé automatique en
+                                    arabe</div>
+                                <p class="pc-desc" data-i18n="modele_transformer_pour_resumes_de_texte">Modèle
+                                    Transformer pour résumés de textes académiques arabes.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="km_2">KM</div>
+                                    <div class="pc-auth" data-i18n="vous_responsable">Vous (responsable)</div><span
+                                        class="pcs pcs-op" data-i18n="actif">Actif</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc">
+                            <div class="pc-img pci-o">👁️<span class="pc-tag to" data-i18n="vision">Vision</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="detection_maladies_agricoles_1">Détection maladies
+                                    agricoles</div>
+                                <p class="pc-desc" data-i18n="cnn_pour_identifier_les_pathologies_des_">CNN pour
+                                    identifier les pathologies des cultures céréalières.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="sb">SB</div>
+                                    <div class="pc-auth" data-i18n="sara_benali">Sara Benali</div><span
+                                        class="pcs pcs-op" data-i18n="actif_1">Actif</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc">
+                            <div class="pc-img pci-b">📊<span class="pc-tag tb" data-i18n="data">Data</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="prediction_reussite_etudiante_1">Prédiction réussite
+                                    étudiante</div>
+                                <p class="pc-desc" data-i18n="ml_pour_predire_le_decrochage_universita">ML pour prédire
+                                    le décrochage universitaire.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="ao">AO</div>
+                                    <div class="pc-auth" data-i18n="amine_ouadah">Amine Ouadah</div><span
+                                        class="pcs pcs-fu" data-i18n="complet">Complet</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sh">
+                        <h2 data-i18n="prochains_evenements">Prochains événements</h2><button class="sh-a"
+                            onclick="showTab('t-events')" data-i18n="voir_tout_1">Voir tout
+                            →</button>
+                    </div>
+                    <div class="ev-list">
+                        <div class="ev">
+                            <div class="ev-date evd-g">
+                                <div class="ev-day evc-g" data-i18n="10">10</div>
+                                <div class="ev-mo" data-i18n="mars">Mars</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="workshop_deep_learning_avec_pytorch">Workshop Deep
+                                    Learning avec PyTorch</div>
+                                <div class="ev-meta"><span data-i18n="10001300">🕙 10:00–13:00</span><span
+                                        data-i18n="salle_204_bloc_b">📍 Salle 204, Bloc B</span><span
+                                        class="ev-type etw" data-i18n="workshop">Workshop</span></div>
+                            </div>
+                            <div class="ev-acts"><span class="btn-reged" data-i18n="inscrit">✅ Inscrit</span></div>
+                        </div>
+                        <div class="ev">
+                            <div class="ev-date evd-o">
+                                <div class="ev-day evc-o" data-i18n="17">17</div>
+                                <div class="ev-mo" data-i18n="mars_1">Mars</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="conference_ia_ethique_en_algerie">Conférence : IA &amp;
+                                    Éthique en Algérie</div>
+                                <div class="ev-meta"><span data-i18n="14001700">🕙 14:00–17:00</span><span
+                                        data-i18n="amphi_principal">📍 Amphi Principal</span><span class="ev-type etc"
+                                        data-i18n="conference">Conférence</span></div>
+                            </div>
+                            <div class="ev-acts"><button class="btn-reg" onclick="regEv(this)"
+                                    data-i18n="sinscrire">S'inscrire</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROJECTS -->
+                <div class="dtab" id="t-projects">
+                    <div class="wb">
+                        <div>
+                            <h1 data-i18n="projets_de_recherche_1">Projets de Recherche</h1>
+                            <p data-i18n="explorez_et_rejoignez_les_projets_actifs">Explorez et rejoignez les projets
+                                actifs</p>
+                        </div><button class="btn-primary"
+                            onclick="showToast('Formulaire de soumission bientôt disponible !')"
+                            data-i18n="proposer_un_projet">+ Proposer un
+                            projet</button>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap" id="proj-filters">
+                        <button onclick="filterProj(this,'all')" class="btn-primary"
+                            style="padding:7px 18px;font-size:.8rem" data-i18n="tous">Tous</button>
+                        <button onclick="filterProj(this,'nlp')" class="btn-secondary"
+                            style="padding:7px 18px;font-size:.8rem" data-i18n="nlp_1">NLP</button>
+                        <button onclick="filterProj(this,'vision')" class="btn-secondary"
+                            style="padding:7px 18px;font-size:.8rem" data-i18n="vision_1">Vision</button>
+                        <button onclick="filterProj(this,'data')" class="btn-secondary"
+                            style="padding:7px 18px;font-size:.8rem" data-i18n="data_1">Data</button>
+                        <button onclick="filterProj(this,'rl')" class="btn-secondary"
+                            style="padding:7px 18px;font-size:.8rem" data-i18n="rl">RL</button>
+                    </div>
+                    <div class="proj-grid" id="pj-grid">
+                        <div class="pc" data-cat="nlp">
+                            <div class="pc-img pci-g">🧠<span class="pc-tag tg" data-i18n="nlp_2">NLP</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="resume_automatique_en_arabe_2">Résumé automatique en
+                                    arabe</div>
+                                <p class="pc-desc" data-i18n="transformer_finetune_pour_resumes_academ">Transformer
+                                    fine-tuné pour résumés académiques arabes.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="km_3">KM</div>
+                                    <div class="pc-auth" data-i18n="khalil_mansouri">Khalil Mansouri</div><span
+                                        class="pcs pcs-op" data-i18n="ouvert">Ouvert</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" data-cat="vision">
+                            <div class="pc-img pci-o">👁️<span class="pc-tag to" data-i18n="vision_2">Vision</span>
+                            </div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="detection_maladies_agricoles_2">Détection maladies
+                                    agricoles</div>
+                                <p class="pc-desc" data-i18n="cnn_pour_identifier_les_pathologies_des__1">CNN pour
+                                    identifier les pathologies des cultures céréalières.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="sb_1">SB</div>
+                                    <div class="pc-auth" data-i18n="sara_benali_1">Sara Benali</div><span
+                                        class="pcs pcs-op" data-i18n="ouvert_1">Ouvert</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" data-cat="data">
+                            <div class="pc-img pci-b">📊<span class="pc-tag tb" data-i18n="data_2">Data</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="prediction_reussite_etudiante_2">Prédiction réussite
+                                    étudiante</div>
+                                <p class="pc-desc" data-i18n="ml_pour_predire_le_decrochage_universita_1">ML pour
+                                    prédire le décrochage universitaire.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="ao_1">AO</div>
+                                    <div class="pc-auth" data-i18n="amine_ouadah_1">Amine Ouadah</div><span
+                                        class="pcs pcs-fu" data-i18n="complet_1">Complet</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" data-cat="nlp">
+                            <div class="pc-img pci-p">💬<span class="pc-tag tp" data-i18n="nlp_3">NLP</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="chatbot_dorientation_universitaire">Chatbot
+                                    d'orientation universitaire</div>
+                                <p class="pc-desc" data-i18n="assistant_conversationnel_pour_aider_les">Assistant
+                                    conversationnel pour aider les étudiants dans les filières.
+                                </p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="rl_1">RL</div>
+                                    <div class="pc-auth" data-i18n="rima_lamine">Rima Lamine</div><span
+                                        class="pcs pcs-op" data-i18n="ouvert_2">Ouvert</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" data-cat="rl">
+                            <div class="pc-img pci-g">🤖<span class="pc-tag tg" data-i18n="rl_2">RL</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="robot_pedagogique_autonome">Robot pédagogique autonome
+                                </div>
+                                <p class="pc-desc" data-i18n="apprentissage_par_renforcement_pour_un_r">Apprentissage
+                                    par renforcement pour un robot éducatif adaptatif.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="ma">MA</div>
+                                    <div class="pc-auth" data-i18n="mehdi_aissa">Mehdi Aissa</div><span
+                                        class="pcs pcs-op" data-i18n="ouvert_3">Ouvert</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" data-cat="vision">
+                            <div class="pc-img pci-o">🏥<span class="pc-tag to" data-i18n="vision_3">Vision</span></div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="diagnostic_medical_par_imagerie">Diagnostic médical par
+                                    imagerie</div>
+                                <p class="pc-desc" data-i18n="deep_learning_pour_la_detection_de_patho">Deep learning
+                                    pour la détection de pathologies dans les
+                                    radiographies.</p>
+                                <div class="pc-foot">
+                                    <div class="pc-av" data-i18n="nb">NB</div>
+                                    <div class="pc-auth" data-i18n="nadia_belkacem">Nadia Belkacem</div><span
+                                        class="pcs pcs-cl" data-i18n="ferme">Fermé</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVENTS -->
+                <div class="dtab" id="t-events">
+                    <div class="wb">
+                        <div>
+                            <h1 data-i18n="evenements_formations_1">Événements &amp; Formations</h1>
+                            <p data-i18n="inscrivezvous_aux_activites_de_la_commun">Inscrivez-vous aux activités de la
+                                communauté</p>
+                        </div>
+                        <div class="wb-date" data-i18n="mars_avril_2025">📅 Mars – Avril 2025</div>
+                    </div>
+                    <div class="ev-list">
+                        <div class="ev">
+                            <div class="ev-date evd-g">
+                                <div class="ev-day evc-g" data-i18n="10_1">10</div>
+                                <div class="ev-mo" data-i18n="mars_2">Mars</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="workshop_deep_learning_avec_pytorch_1">Workshop Deep
+                                    Learning avec PyTorch</div>
+                                <div class="ev-meta"><span data-i18n="10001300_1">🕙 10:00–13:00</span><span
+                                        data-i18n="salle_204_bloc_b_1">📍 Salle 204, Bloc
+                                        B</span><span data-i18n="2430">👥 24/30</span><span class="ev-type etw"
+                                        data-i18n="workshop_1">Workshop</span></div>
+                            </div>
+                            <div class="ev-acts"><span class="btn-reged" data-i18n="inscrit_1">✅ Inscrit</span></div>
+                        </div>
+                        <div class="ev">
+                            <div class="ev-date evd-o">
+                                <div class="ev-day evc-o" data-i18n="17_1">17</div>
+                                <div class="ev-mo" data-i18n="mars_3">Mars</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="conference_ia_ethique_en_algerie_1">Conférence : IA
+                                    &amp; Éthique en Algérie</div>
+                                <div class="ev-meta"><span data-i18n="14001700_1">🕙 14:00–17:00</span><span
+                                        data-i18n="amphi_principal_1">📍 Amphi Principal</span><span
+                                        data-i18n="80150">👥
+                                        80/150</span><span class="ev-type etc"
+                                        data-i18n="conference_1">Conférence</span></div>
+                            </div>
+                            <div class="ev-acts"><button class="btn-reg" onclick="regEv(this)"
+                                    data-i18n="sinscrire_1">S'inscrire</button></div>
+                        </div>
+                        <div class="ev">
+                            <div class="ev-date evd-g">
+                                <div class="ev-day evc-g" data-i18n="24">24</div>
+                                <div class="ev-mo" data-i18n="mars_4">Mars</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="hackathon_ia_24h_challenge">Hackathon IA — 24h
+                                    Challenge</div>
+                                <div class="ev-meta"><span data-i18n="0900_24h">🕙 09:00 – +24h</span><span
+                                        data-i18n="espace_innovation">📍 Espace
+                                        Innovation</span><span data-i18n="4560">👥 45/60</span><span class="ev-type eth"
+                                        data-i18n="hackathon">Hackathon</span>
+                                </div>
+                            </div>
+                            <div class="ev-acts"><button class="btn-reg" onclick="regEv(this)"
+                                    data-i18n="sinscrire_2">S'inscrire</button></div>
+                        </div>
+                        <div class="ev">
+                            <div class="ev-date evd-o">
+                                <div class="ev-day evc-o" data-i18n="05">05</div>
+                                <div class="ev-mo" data-i18n="avr">Avr</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="bootcamp_nlp_pour_debutants">Bootcamp NLP pour
+                                    débutants</div>
+                                <div class="ev-meta"><span data-i18n="09001700">🕙 09:00–17:00</span><span
+                                        data-i18n="labo_informatique">📍 Labo
+                                        Informatique</span><span data-i18n="1220">👥 12/20</span><span
+                                        class="ev-type etw" data-i18n="bootcamp">Bootcamp</span></div>
+                            </div>
+                            <div class="ev-acts"><button class="btn-reg" onclick="regEv(this)"
+                                    data-i18n="sinscrire_3">S'inscrire</button></div>
+                        </div>
+                        <div class="ev">
+                            <div class="ev-date evd-g">
+                                <div class="ev-day evc-g" data-i18n="18_1">18</div>
+                                <div class="ev-mo" data-i18n="avr_1">Avr</div>
+                            </div>
+                            <div class="ev-info">
+                                <div class="ev-title" data-i18n="seminaire_grandes_tendances_ia_2025">Séminaire :
+                                    Grandes tendances IA 2025</div>
+                                <div class="ev-meta"><span data-i18n="10001200">🕙 10:00–12:00</span><span
+                                        data-i18n="salle_de_conference">📍 Salle de
+                                        conférence</span><span data-i18n="3050">👥 30/50</span><span class="ev-type etc"
+                                        data-i18n="seminaire">Séminaire</span>
+                                </div>
+                            </div>
+                            <div class="ev-acts"><button class="btn-reg" onclick="regEv(this)"
+                                    data-i18n="sinscrire_4">S'inscrire</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTIVITIES -->
+                <div class="dtab" id="t-activities">
+                    <div class="wb">
+                        <div>
+                            <h1 data-i18n="mes_activites">Mes Activités</h1>
+                            <p data-i18n="historique_de_vos_contributions_et_parti">Historique de vos contributions et
+                                participations</p>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                        <div class="card-box">
+                            <div class="sh">
+                                <h2 data-i18n="fil_dactivite">Fil d'activité</h2>
+                            </div>
+                            <div class="af">
+                                <div class="afi">
+                                    <div class="afd afd-g" data-i18n="text_25">🧪</div>
+                                    <div>
+                                        <div class="af-text">Vous avez rejoint le projet <strong
+                                                data-i18n="resume_automatique_en_arabe_3">Résumé automatique en
+                                                arabe</strong></div>
+                                        <div class="af-time" data-i18n="il_y_a_2_jours">Il y a 2 jours</div>
+                                    </div>
+                                </div>
+                                <div class="afi">
+                                    <div class="afd afd-o" data-i18n="text_26">📅</div>
+                                    <div>
+                                        <div class="af-text">Inscription au <strong
+                                                data-i18n="workshop_deep_learning_1">Workshop Deep Learning</strong>
+                                            confirmée</div>
+                                        <div class="af-time" data-i18n="il_y_a_4_jours">Il y a 4 jours</div>
+                                    </div>
+                                </div>
+                                <div class="afi">
+                                    <div class="afd afd-b" data-i18n="text_27">📝</div>
+                                    <div>
+                                        <div class="af-text">Vous avez complété le module <strong
+                                                data-i18n="introduction_au_nlp">Introduction au
+                                                NLP</strong></div>
+                                        <div class="af-time" data-i18n="il_y_a_1_semaine">Il y a 1 semaine</div>
+                                    </div>
+                                </div>
+                                <div class="afi">
+                                    <div class="afd afd-g" data-i18n="text_28">🤝</div>
+                                    <div>
+                                        <div class="af-text">Contribution au projet <strong
+                                                data-i18n="prediction_reussite_etudiante_3">Prédiction réussite
+                                                étudiante</strong></div>
+                                        <div class="af-time" data-i18n="il_y_a_2_semaines">Il y a 2 semaines</div>
+                                    </div>
+                                </div>
+                                <div class="afi">
+                                    <div class="afd afd-o" data-i18n="text_29">🎤</div>
+                                    <div>
+                                        <div class="af-text">Participation à la conférence <strong
+                                                data-i18n="ia_societe">IA &amp; Société</strong>
+                                        </div>
+                                        <div class="af-time" data-i18n="il_y_a_3_semaines">Il y a 3 semaines</div>
+                                    </div>
+                                </div>
+                                <div class="afi">
+                                    <div class="afd afd-b" data-i18n="text_30">🏆</div>
+                                    <div>
+                                        <div class="af-text">Badge <strong data-i18n="gold_member">Gold Member</strong>
+                                            obtenu — 3 mois
+                                            d'activité</div>
+                                        <div class="af-time" data-i18n="il_y_a_1_mois">Il y a 1 mois</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:18px">
+                            <div class="card-box">
+                                <div class="sh">
+                                    <h2 data-i18n="mes_statistiques">Mes statistiques</h2>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                                    <div class="pcs-i">
+                                        <div class="pcs-v" style="color:var(--green)">3</div>
+                                        <div class="pcs-l" data-i18n="projets_actifs_1">Projets actifs</div>
+                                    </div>
+                                    <div class="pcs-i">
+                                        <div class="pcs-v" style="color:var(--orange)">5</div>
+                                        <div class="pcs-l" data-i18n="evenements_1">Événements</div>
+                                    </div>
+                                    <div class="pcs-i">
+                                        <div class="pcs-v" data-i18n="14_1">14</div>
+                                        <div class="pcs-l" data-i18n="actions_totales">Actions totales</div>
+                                    </div>
+                                    <div class="pcs-i">
+                                        <div class="pcs-v" style="color:#821a7a" data-i18n="text_31">🏆</div>
+                                        <div class="pcs-l" data-i18n="niveau_gold">Niveau Gold</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background:var(--dark);border-radius:16px;padding:24px">
+                                <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.95rem;color:#fff;margin-bottom:14px"
+                                    data-i18n="prochaine_etape">
+                                    Prochaine étape</div>
+                                <p
+                                    style="font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px">
+                                    Participez à 2 événements supplémentaires pour atteindre le niveau <strong
+                                        style="color:var(--orange-l)" data-i18n="platinum">Platinum</strong>.</p>
+                                <div
+                                    style="background:rgba(255,255,255,.08);border-radius:8px;height:8px;overflow:hidden">
+                                    <div
+                                        style="height:100%;width:70%;background:linear-gradient(90deg,var(--green),var(--green-l));border-radius:8px">
+                                    </div>
+                                </div>
+                                <div style="font-size:.74rem;color:rgba(255,255,255,.3);margin-top:7px"
+                                    data-i18n="35_evenements">3/5 événements
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE -->
+                <div class="dtab" id="t-profile">
+                    <div class="wb">
+                        <div>
+                            <h1 data-i18n="mon_profil">Mon Profil</h1>
+                            <p data-i18n="gerez_vos_informations_et_preferences">Gérez vos informations et préférences
+                            </p>
+                        </div><button class="btn-primary" onclick="showToast('Profil mis à jour !')"
+                            data-i18n="sauvegarder">Sauvegarder</button>
+                    </div>
+                    <div class="prof-grid">
+                        <div class="pcard">
+                            <div class="pcard-av" id="p-av" data-i18n="km_4">KM</div>
+                            <div class="pcard-name" id="p-nm" data-i18n="khalil_mansouri_1">Khalil Mansouri</div>
+                            <div class="pcard-role" id="p-rl" data-i18n="etudiant_master_uhbc">Étudiant Master — UHBC
+                            </div>
+                            <div class="pcard-badge" data-i18n="membre_gold">🏆 Membre Gold</div>
+                            <div class="pcard-stats">
+                                <div class="pcs-i">
+                                    <div class="pcs-v" style="color:var(--green)">3</div>
+                                    <div class="pcs-l" data-i18n="projets_1">Projets</div>
+                                </div>
+                                <div class="pcs-i">
+                                    <div class="pcs-v" style="color:var(--orange)">5</div>
+                                    <div class="pcs-l" data-i18n="evenements_2">Événements</div>
+                                </div>
+                                <div class="pcs-i">
+                                    <div class="pcs-v" data-i18n="14_2">14</div>
+                                    <div class="pcs-l" data-i18n="activites_2">Activités</div>
+                                </div>
+                                <div class="pcs-i">
+                                    <div class="pcs-v">3</div>
+                                    <div class="pcs-l" data-i18n="mois_actif">Mois actif</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pdet">
+                            <div class="pdet-sec">
+                                <h3 data-i18n="informations_personnelles">Informations personnelles</h3>
+                                <div class="pdr">
+                                    <div class="pdf"><label data-i18n="prenom">Prénom</label><span id="pd-pre"
+                                            data-i18n="khalil_2">Khalil</span></div>
+                                    <div class="pdf"><label data-i18n="nom">Nom</label><span id="pd-nom"
+                                            data-i18n="mansouri">Mansouri</span></div>
+                                </div>
+                                <div class="pdr">
+                                    <div class="pdf"><label data-i18n="email">Email</label><span id="pd-email"><a
+                                                href="/cdn-cgi/l/email-protection" class="__cf_email__"
+                                                data-cfemail="0863266569667b677d7a61487d66617e256b60646d6e266c72"
+                                                data-i18n="email_protected">[email&nbsp;protected]</a></span>
+                                    </div>
+                                    <div class="pdf"><label data-i18n="profil">Profil</label><span id="pd-profil"
+                                            data-i18n="etudiant_master_1">Étudiant Master</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pdet-sec">
+                                <h3 data-i18n="domaines_dinteret">Domaines d'intérêt</h3>
+                                <div class="chips">
+                                    <span class="chip" id="pd-chip" data-i18n="nlp_4">NLP</span>
+                                    <span class="chip" data-i18n="deep_learning">Deep Learning</span>
+                                    <span class="chip chip-o" data-i18n="ethique_ia">Éthique IA</span>
+                                    <span class="chip" data-i18n="python">Python</span>
+                                    <span class="chip chip-o" data-i18n="transformers">Transformers</span>
+                                </div>
+                            </div>
+                            <div class="pdet-sec">
+                                <h3 data-i18n="projets_actifs_2">Projets actifs</h3>
+                                <div style="display:flex;flex-direction:column;gap:8px">
+                                    <div style="display:flex;align-items:center;gap:10px;font-size:.85rem">
+                                        <span data-i18n="text_32">🧠</span><span
+                                            style="color:var(--dark);font-weight:500;flex:1"
+                                            data-i18n="resume_automatique_en_arabe_4">Résumé
+                                            automatique en arabe</span><span class="pcs pcs-op"
+                                            data-i18n="actif_2">Actif</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;font-size:.85rem">
+                                        <span data-i18n="text_33">👁️</span><span
+                                            style="color:var(--dark);font-weight:500;flex:1"
+                                            data-i18n="detection_maladies_agricoles_3">Détection
+                                            maladies agricoles</span><span class="pcs pcs-op"
+                                            data-i18n="actif_3">Actif</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;font-size:.85rem">
+                                        <span data-i18n="text_34">📊</span><span
+                                            style="color:var(--dark);font-weight:500;flex:1"
+                                            data-i18n="prediction_reussite_etudiante_4">Prédiction
+                                            réussite étudiante</span><span class="pcs pcs-fu"
+                                            data-i18n="complet_2">Complet</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESOURCES -->
+                <div class="dtab" id="t-resources">
+                    <div class="wb">
+                        <div>
+                            <h1 data-i18n="ressources_membres">Ressources membres</h1>
+                            <p data-i18n="acces_exclusif_aux_outils_datasets_et_su">Accès exclusif aux outils, datasets
+                                et supports de formation</p>
+                        </div>
+                    </div>
+                    <div class="proj-grid">
+                        <div class="pc" onclick="showToast('Téléchargement démarré !')">
+                            <div class="pc-img pci-g" style="font-size:2.2rem" data-i18n="text_35">📦</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="dataset_arabic_nlp_1">Dataset Arabic NLP</div>
+                                <p class="pc-desc" data-i18n="collection_de_50k_textes_academiques_en_">Collection de
+                                    50k textes académiques en arabe annotés.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="23_gb_csv">2.3 GB ·
+                                        CSV</span><span class="pcs pcs-op" data-i18n="disponible">Disponible</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" onclick="showToast('Ouverture du notebook...')">
+                            <div class="pc-img pci-b" style="font-size:2.2rem" data-i18n="text_36">📓</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="notebooks_pytorch">Notebooks PyTorch</div>
+                                <p class="pc-desc" data-i18n="10_notebooks_colab_couvrant_cnn_rnn_tran">10 notebooks
+                                    Colab couvrant CNN, RNN, Transformers et LLMs.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="jupyter_python">Jupyter ·
+                                        Python</span><span class="pcs pcs-op" data-i18n="disponible_1">Disponible</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" onclick="showToast('Accès GPU demandé !')">
+                            <div class="pc-img pci-o" style="font-size:2.2rem">⚡</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="acces_gpu_cloud">Accès GPU Cloud</div>
+                                <p class="pc-desc" data-i18n="quota_mensuel_de_20h_gpu_sur_le_serveur_">Quota mensuel de
+                                    20h GPU sur le serveur de calcul universitaire.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="nvidia_a100">NVIDIA
+                                        A100</span><span class="pcs pcs-op" data-i18n="disponible_2">Disponible</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc" onclick="showToast('Bibliothèque ouverte !')">
+                            <div class="pc-img pci-p" style="font-size:2.2rem" data-i18n="text_37">📚</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="bibliotheque_ia">Bibliothèque IA</div>
+                                <p class="pc-desc" data-i18n="acces_a_200_articles_livres_et_theses_su">Accès à 200+
+                                    articles, livres et thèses sur l'IA.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="pdf_200_docs">PDF · 200+
+                                        docs</span><span class="pcs pcs-op" data-i18n="disponible_3">Disponible</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pc">
+                            <div class="pc-img pci-g" style="font-size:2.2rem" data-i18n="text_38">🎓</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="cours_en_ligne_uhbc">Cours en ligne UHBC</div>
+                                <p class="pc-desc" data-i18n="modules_elearning_certifiants_en_ml_dl_v">Modules
+                                    e-learning certifiants en ML, DL, vision et NLP.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="15_modules">15
+                                        modules</span><span class="pcs pcs-op"
+                                        data-i18n="disponible_4">Disponible</span></div>
+                            </div>
+                        </div>
+                        <div class="pc">
+                            <div class="pc-img pci-b" style="font-size:2.2rem" data-i18n="text_39">🤝</div>
+                            <div class="pc-body">
+                                <div class="pc-title" data-i18n="reseau_partenaires">Réseau partenaires</div>
+                                <p class="pc-desc" data-i18n="annuaire_des_entreprises_partenaires_et_">Annuaire des
+                                    entreprises partenaires et offres de stage IA.</p>
+                                <div class="pc-foot"><span style="font-size:.75rem;color:var(--muted)"
+                                        data-i18n="12_entreprises">12
+                                        entreprises</span><span class="pcs pcs-op"
+                                        data-i18n="disponible_5">Disponible</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-ov" id="modal-ov">
+        <div class="modal">
+            <button class="modal-x" onclick="closeModal()">✕</button>
+            <h2 data-i18n="rejoindre_lai_house">Rejoindre l'AI HOUSE</h2>
+            <p data-i18n="creez_votre_compte_pour_acceder_a_tous_l">Créez votre compte pour accéder à tous les projets,
+                événements et ressources exclusives.</p>
+            <div class="fr">
+                <div class="fgg"><label data-i18n="prenom_1">Prénom</label><input type="text" id="mf-pre"
+                        placeholder="Votre prénom"></div>
+                <div class="fgg"><label data-i18n="nom_1">Nom</label><input type="text" id="mf-nom"
+                        placeholder="Votre nom"></div>
+            </div>
+            <div class="fgg"><label data-i18n="email_1">Email</label><input type="email" id="mf-email"
+                    placeholder="vous@univ-chlef.dz">
+            </div>
+            <div class="fgg"><label data-i18n="profil_1">Profil</label>
+                <select id="mf-profil">
+                    <option value="" data-i18n="choisir_votre_profil">Choisir votre profil</option>
+                    <option data-i18n="etudiant_licence">Étudiant Licence</option>
+                    <option data-i18n="etudiant_master_2">Étudiant Master</option>
+                    <option data-i18n="doctorant">Doctorant</option>
+                    <option data-i18n="enseignant_chercheur">Enseignant / Chercheur</option>
+                    <option data-i18n="professionnel_entreprise">Professionnel / Entreprise</option>
+                </select>
+            </div>
+            <div class="fgg"><label data-i18n="domaine_dinteret">Domaine d'intérêt</label>
+                <select id="mf-domaine">
+                    <option value="" data-i18n="selectionner">Sélectionner</option>
+                    <option data-i18n="nlp_traitement_du_langage">NLP / Traitement du langage</option>
+                    <option data-i18n="vision_par_ordinateur">Vision par ordinateur</option>
+                    <option data-i18n="machine_learning">Machine Learning</option>
+                    <option data-i18n="deep_learning_1">Deep Learning</option>
+                    <option data-i18n="ia_ethique_societe">IA éthique &amp; société</option>
+                </select>
+            </div>
+            <button class="btn-join" onclick="handleJoin()" data-i18n="acceder_a_mon_espace">Accéder à mon espace
+                →</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+
+    <script src="script.js"></script>
+
+
+
+
+</body>
+
+</html>
