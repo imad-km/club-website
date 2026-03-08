@@ -668,6 +668,7 @@ const i18n = {
     events: "Événements",
 
     resources: "Ressources",
+    activites_1:"Activites",
 
     dataset_arabic_nlp: "Jeu de données NLP arabe",
 
