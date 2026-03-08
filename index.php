@@ -1,4 +1,5 @@
 <?php
+include 'ai-assistant.php';
 session_start();
 $__logged = isset($_SESSION['access']) ? 'true' : 'false';
 ?>
