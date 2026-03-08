@@ -164,6 +164,12 @@
 }
 #chat-send:hover{background:#22953f;transform:scale(1.05)}
 #chat-send:disabled{background:#ddeae2;cursor:not-allowed;transform:none}
+
+/* ─── MOBILE: lift above the bottom nav bar (~70px tall) ─── */
+@media(max-width:768px){
+  #chat-bubble{bottom:86px;right:16px;}
+  #chat-panel{bottom:158px;right:16px;left:16px;width:auto;height:420px;}
+}
 </style>
 
 <!-- Chat Bubble Button -->
