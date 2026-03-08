@@ -5,6 +5,14 @@ if (isset($_GET['logout'])) { session_destroy(); }
 if (isset($_SESSION['access'])) { header('Location: dashboard.php'); exit(); }
 
 $err = '';
+$isBan = false;
+if (isset($_GET['banned'])) {
+    $isBan = true;
+    $err = 'Your account has been banned. Reason: ' . htmlspecialchars(urldecode($_GET['reason'] ?? 'No reason provided'));
+}
+if (isset($_GET['err']) && $_GET['err'] === 'not_student') {
+    $err = 'Access denied. This portal is for students only.';
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
     if (!$pl) { $err = 'Invalid request'; }
@@ -14,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
         $r=json_decode($body,true)??[];
         if($code===200&&isset($r['user']['access'])){$_SESSION['access']=$r['user']['access'];$_SESSION['refresh']=$r['user']['refresh'];header('Location: dashboard.php');exit();}
-        $err=$r['error']??'Invalid credentials';
+        if($code===403&&isset($r['status'])&&$r['status']==='ban'){$isBan=true;$err='Your account has been banned. Reason: '.($r['reason']??'No reason provided');}
+        else{$err=$r['error']??'Invalid credentials';}
     }
 }
 
@@ -28,6 +37,9 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
 <link rel="stylesheet" href="css/global.css"/>
 <link rel="stylesheet" href="css/auth.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+.auth-ban{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:13px 15px;font-size:13px;color:#92400e;margin-bottom:20px;}
+</style>
 </head>
 <body class="auth-body">
 
@@ -63,7 +75,15 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
     <p class="auth-sub">Access your student dashboard.</p>
 
     <?php if($err): ?>
-      <div class="auth-err"><?= htmlspecialchars($err) ?></div>
+      <div class="<?= $isBan ? 'auth-ban' : 'auth-err' ?>">
+        <?php if($isBan): ?>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:700;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Account Banned
+          </div>
+        <?php endif; ?>
+        <?= htmlspecialchars($err) ?>
+      </div>
     <?php endif; ?>
 
     <form method="POST" action="" id="loginForm">

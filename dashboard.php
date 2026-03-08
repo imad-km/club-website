@@ -67,6 +67,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
+    } elseif ($action === '_ping_me') {
+        $r = api_get('/me');
+        $d = $r['data'] ?? [];
+        if ($r['code'] === 403 && ($d['status'] ?? '') === 'ban') {
+            header('Content-Type: application/json');
+            echo json_encode(['_banned' => true, '_reason' => $d['reason'] ?? '']);
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['_banned' => false]);
+        }
+        exit();
     } elseif ($action === 'join_project') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/join', []);
         header('Location: dashboard.php?msg='.($r['code']===201 ? 'project_joined' : 'err_'.urlencode($r['data']['error']??'error')));
@@ -89,6 +100,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $me       = require_auth();
+
+if (($me['_code'] ?? 0) === 403 && ($me['status'] ?? '') === 'ban') {
+    session_destroy();
+    $reason = urlencode($me['reason'] ?? 'Your account has been banned.');
+    header('Location: login.php?banned=1&reason=' . $reason);
+    exit();
+}
+
+if (($me['perm'] ?? $me['role'] ?? '') === 'professor') {
+    session_destroy();
+    header('Location: login.php?err=not_student');
+    exit();
+}
+
 $initials = strtoupper(substr($me['firstname'],0,1) . substr($me['lastname'],0,1));
 
 $projects      = api_get('/projects');
@@ -972,6 +997,15 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tab-count-ann').textContent      = ANNOUNCEMENTS.length;
   document.getElementById('tab-count-events').textContent   = EVENTS.length;
   <?php if($page_toast): ?>showToast(<?= json_encode($page_toast) ?>);<?php endif; ?>
+
+  setInterval(async function() {
+    try {
+      const r = await _postAjax({_action: '_ping_me'});
+      if (r && r._banned) {
+        window.location.href = 'login.php?banned=1&reason=' + encodeURIComponent(r._reason || 'Your account has been banned.');
+      }
+    } catch(e) {}
+  }, 60000);
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeCreateProject(); closeDrawer(); closeStoryViewer(); closeStudentProfile(); closeLightbox(); }
