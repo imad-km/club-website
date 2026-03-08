@@ -616,18 +616,18 @@ function pBuildCard(p, i){
   const roleBadge = isOwner
     ? `<span class="role-badge-owner"><i class="fa-solid fa-crown"></i> Créateur</span>`
     : `<span class="role-badge-contrib"><i class="fa-solid fa-users"></i> Contributeur</span>`;
-  const avHtml = owner.image ? `<img src="${owner.image}" alt="">` : initials;
+  // avatar set via DOM after innerHTML to avoid base64 breaking template literals
   const imgSection = p.image
     ? `<div class="pc-img-wrap"><img class="pc-img lb-trigger" src="${p.image}" alt="" loading="lazy" onclick="openLightbox(this.src,'${(p.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
     : '';
-  const meAv = ME_PROF.image ? `<img src="${ME_PROF.image}" alt="">` : pGetInitials(ME_PROF.firstname, ME_PROF.lastname);
+  // meAv set via DOM below
   const el = document.createElement('div');
   el.className = 'project-card lk-card';
   el.style.animationDelay = (i*80)+'ms';
   el.dataset.projectId = p.id;
   el.innerHTML = `
     <div class="lk-header" onclick="window.location.href='profile.php?id=${owner.id||0}'" style="cursor:pointer">
-      <div class="pch-av">${avHtml}</div>
+      <div class="pch-av" id="pch-av-${p.id}"></div>
       <div class="pch-info">
         <div class="pch-name">${owner.firstname} ${owner.lastname}</div>
         <div class="pch-meta"><span>${owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
@@ -656,7 +656,7 @@ function pBuildCard(p, i){
     </div>
     <div class="lk-comments-panel" id="pcmt-panel-${p.id}" style="display:none">
       <div class="lk-cmt-input-row">
-        <div class="lk-cmt-av">${meAv}</div>
+        <div class="lk-cmt-av" id="pcmt-meav-${p.id}"></div>
         <div class="lk-cmt-input-wrap">
           <input class="lk-cmt-input" id="pcmt-input-${p.id}" type="text" placeholder="Écrire un commentaire…" onkeydown="if(event.key==='Enter')pSubmitComment(${p.id})">
           <button class="lk-cmt-send" onclick="pSubmitComment(${p.id})"><i class="fa-solid fa-paper-plane"></i></button>
@@ -664,6 +664,31 @@ function pBuildCard(p, i){
       </div>
       <div class="lk-cmt-list" id="pcmt-list-${p.id}"><div class="lk-cmt-loading"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
     </div>`;
+  // Set owner avatar via DOM to safely handle base64 image strings
+  const avDiv = el.querySelector('#pch-av-'+p.id);
+  if (avDiv) {
+    if (owner.image) {
+      const img = document.createElement('img');
+      img.src = owner.image;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      img.onerror = function(){ avDiv.textContent = initials; };
+      avDiv.appendChild(img);
+    } else {
+      avDiv.textContent = initials;
+    }
+  }
+  // Set current user avatar in comment input via DOM
+  const meAvDiv = el.querySelector('#pcmt-meav-'+p.id);
+  if (meAvDiv) {
+    if (ME_PROF.image) {
+      const img = document.createElement('img');
+      img.src = ME_PROF.image;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      meAvDiv.appendChild(img);
+    } else {
+      meAvDiv.textContent = pGetInitials(ME_PROF.firstname, ME_PROF.lastname);
+    }
+  }
   return el;
 }
 
