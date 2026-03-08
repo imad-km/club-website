@@ -2,7 +2,7 @@
 require_once 'includes/config.php';
 require_once 'includes/api_helper.php';
 session_start();
-
+include 'ai-assistant.php';
 
 function api_delete(string $path): array {
     $token = $_SESSION['access'] ?? '';
