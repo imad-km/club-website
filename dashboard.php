@@ -176,8 +176,9 @@ if (isset($_GET['msg'])) {
 .lk-body{padding:2px 16px 14px;}
 .lk-meta-row{margin-top:10px;}
 
-.pc-img-wrap{width:100%;overflow:hidden;max-height:340px;background:var(--border);}
-.pc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+/* FIX: image wrapper uses flex to center, height is auto to avoid stretch */
+.pc-img-wrap{width:100%;overflow:hidden;background:var(--border);max-height:360px;display:flex;align-items:center;justify-content:center;}
+.pc-img{width:100%;height:auto;max-height:360px;object-fit:contain;display:block;transition:transform .3s;}
 .lk-card:hover .pc-img{transform:scale(1.02);}
 .pc-img-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;gap:10px;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
 .pc-img-ph-nlp{background:linear-gradient(135deg,#eef6f1,#d0eadb);color:var(--green);}
@@ -308,7 +309,8 @@ if (isset($_GET['msg'])) {
 </head>
 <body>
 <nav class="top-nav">
-  <a class="nav-logo" href="dashboard.php">
+  <!-- FIX 1: logo now points to index.php -->
+  <a class="nav-logo" href="index.php">
     <img src="https://i.imgur.com/zl5jHaY.png" alt="AI House UHBC">
     <span class="nav-logo-text">AI <span>House</span></span>
   </a>
@@ -375,8 +377,9 @@ if (isset($_GET['msg'])) {
           <button class="ff-btn" onclick="filterFeed(this,'ml')">ML</button>
           <button class="ff-btn" onclick="filterFeed(this,'other')">Autre</button>
         </div>
+        <!-- FIX 2: "Tous" renamed to "Récent" with clock icon, sorts by date -->
         <div class="ff-sort-row">
-          <button class="ff-sort-btn active" onclick="sortFeed(this,'all')"><i class="fa-solid fa-border-all"></i> Tous</button>
+          <button class="ff-sort-btn active" onclick="sortFeed(this,'recent')"><i class="fa-solid fa-clock-rotate-left"></i> Récent</button>
           <button class="ff-sort-btn" onclick="sortFeed(this,'likes')"><i class="fa-solid fa-heart"></i> Plus aimés</button>
           <button class="ff-sort-btn" onclick="sortFeed(this,'comments')"><i class="fa-regular fa-comment"></i> Plus commentés</button>
         </div>
@@ -609,7 +612,8 @@ const EVENT_TYPE_CSS    = {workshop:'etype-workshop',conference:'etype-conferenc
 const EVENT_TYPE_ICONS  = {workshop:'fa-screwdriver-wrench',conference:'fa-microphone-lines',competition:'fa-trophy',seminar:'fa-chalkboard-user',other:'fa-calendar-days'};
 
 let currentFilter  = 'all';
-let currentSort    = 'all';
+// FIX 2: default sort is now 'recent'
+let currentSort    = 'recent';
 let visibleCount   = 4;
 
 let joinedEventIds = new Set(EVENTS.filter(e => e.is_registered).map(e => e.id));
@@ -642,6 +646,8 @@ function switchTab(tab,btn){
 
 function getFiltered(){
   let arr=PROJECTS.filter(p=>currentFilter==='all'||p.category===currentFilter);
+  // FIX 2: 'recent' sort by created_at descending
+  if(currentSort==='recent')   arr=[...arr].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   if(currentSort==='likes')    arr=[...arr].sort((a,b)=>(b._like_count??b.like_count??0)-(a._like_count??a.like_count??0));
   if(currentSort==='comments') arr=[...arr].sort((a,b)=>(b._comment_count??b.comment_count??0)-(a._comment_count??a.comment_count??0));
   return arr;
