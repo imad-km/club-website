@@ -101,8 +101,8 @@ if ($isOwnProfile) {
         // Fetch projects via /info with own ID — same endpoint used for other profiles
         $infoRes  = api_post('/info', ['id' => $myId]);
         $projects = $infoRes['data']['projects'] ?? [];
-        // All returned projects for own profile are owned
-        $projects = array_map(fn($p) => array_merge($p, ['role'=>'owner']), $projects);
+        $ownerInfo = ['id'=>$myId,'firstname'=>$me['firstname']??'','lastname'=>$me['lastname']??'','image'=>$me['image']??null,'grade'=>$me['grade']??'','domain'=>$me['domain']??''];
+        $projects = array_map(fn($p) => array_merge($p, ['role'=>'owner','owner'=>$ownerInfo]), $projects);
         $followersCount = (int)($infoRes['data']['followers_count'] ?? $infoRes['data']['user']['followers_count'] ?? 0);
         $followingCount = (int)($infoRes['data']['following_count'] ?? $infoRes['data']['user']['following_count'] ?? 0);
     } else {
@@ -127,6 +127,8 @@ if ($isOwnProfile) {
     }
     $subject  = $res['data']['user']     ?? [];
     $projects = $res['data']['projects'] ?? [];
+    $ownerInfo = ['id'=>$subject['id']??0,'firstname'=>$subject['firstname']??'','lastname'=>$subject['lastname']??'','image'=>$subject['image']??null,'grade'=>$subject['grade']??'','domain'=>$subject['domain']??''];
+    $projects = array_map(fn($p) => array_merge($p, ['owner'=>$ownerInfo]), $projects);
     // Follow state — try multiple places the API might put it
     $isFollowing    = (bool)($res['data']['is_following']
                    ?? $res['data']['user']['is_following']
@@ -143,8 +145,7 @@ $displayName     = htmlspecialchars(($subject['firstname']??'').' '.($subject['l
 $displayInitials = strtoupper(substr($subject['firstname']??'',0,1).substr($subject['lastname']??'',0,1));
 $joinYear        = isset($subject['created_at']) ? date('Y', strtotime($subject['created_at'])) : '—';
 
-$owned   = array_values(array_filter($projects, fn($p) => ($p['role']??'') === 'owner'));
-$contrib = array_values(array_filter($projects, fn($p) => ($p['role']??'') !== 'owner'));
+$owned   = $projects;
 
 $catClass = ['nlp'=>'cat-nlp','vision'=>'cat-vision','data'=>'cat-data','rl'=>'cat-rl','ml'=>'cat-ml','other'=>'cat-other'];
 $catLabel = ['nlp'=>'NLP','vision'=>'Vision','data'=>'Data','rl'=>'RL','ml'=>'ML','other'=>'Autre'];
@@ -427,7 +428,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
     </div>
     <div class="p-stats-row">
       <div class="p-stat">
-        <div class="p-stat-val"><?= count($owned) ?></div>
+        <div class="p-stat-val"><?= count($projects) ?></div>
         <div class="p-stat-lbl">Projets</div>
       </div>
       <div class="p-stat" style="border-left:1px solid var(--border)">
@@ -445,37 +446,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
     </div>
   </div>
 
-  <!-- PROJECT SECTION TABS -->
+  <!-- PROJECT SECTION HEADER -->
   <?php if(!empty($projects)): ?>
   <div class="section-tabs">
-    <button class="stab active" onclick="switchStab('owned',this)">
-      <i class="fa-solid fa-crown"></i> Mes projets
-      <span class="stab-count"><?= count($owned) ?></span>
-    </button>
-    <button class="stab" onclick="switchStab('contrib',this)">
-      <i class="fa-solid fa-users"></i> Contributions
-      <span class="stab-count"><?= count($contrib) ?></span>
-    </button>
-    <button class="stab" onclick="switchStab('all',this)">
-      <i class="fa-solid fa-flask"></i> Tous
+    <button class="stab active">
+      <i class="fa-solid fa-flask"></i> Projets
       <span class="stab-count"><?= count($projects) ?></span>
     </button>
   </div>
   <?php endif; ?>
 
-  <!-- OWNED PROJECTS -->
-  <div class="stab-panel active" id="panel-owned">
-    <div id="feed-owned"></div>
-  </div>
-
-  <!-- CONTRIB PROJECTS -->
-  <div class="stab-panel" id="panel-contrib">
-    <div id="feed-contrib"></div>
-  </div>
-
-  <!-- ALL PROJECTS -->
-  <div class="stab-panel" id="panel-all">
-    <div id="feed-all"></div>
+  <!-- PROJECTS -->
+  <div class="stab-panel active" id="panel-projects">
+    <div id="feed-projects"></div>
   </div>
 
 </div><!-- /profile-container -->
@@ -589,8 +572,6 @@ async function toggleFollow(userId){
 }
 
 // ─── PROFILE PROJECTS DATA ───
-const PROF_OWNED   = <?= json_encode(array_values($owned)) ?>;
-const PROF_CONTRIB = <?= json_encode(array_values($contrib)) ?>;
 const PROF_ALL     = <?= json_encode(array_values($projects)) ?>;
 const ME_PROF      = <?= json_encode(['id'=>(int)($me['id']??0),'firstname'=>$me['firstname'],'lastname'=>$me['lastname'],'image'=>$me['image']??'']) ?>;
 const IS_OWN       = <?= $isOwnProfile ? 'true' : 'false' ?>;
@@ -599,10 +580,9 @@ const PCAT_CLASS = {nlp:'cat-nlp',vision:'cat-vision',data:'cat-data',rl:'cat-rl
 const PCAT_LABEL = {nlp:'NLP',vision:'Vision',data:'Data',rl:'RL',ml:'ML',other:'Autre'};
 
 function pGetInitials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
-function pTimeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
+function pTimeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<60)return`à l'instant`;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
 
 function pBuildCard(p, i){
-  const isOwner = (p.role||'') === 'owner';
   const owner   = p.owner || {firstname: p.owner_firstname||'', lastname: p.owner_lastname||'', image: p.owner_image||'', grade: p.owner_grade||'', id: p.owner_id||0};
   const initials = pGetInitials(owner.firstname, owner.lastname);
   const catClass = PCAT_CLASS[p.category]||'cat-other';
@@ -610,35 +590,27 @@ function pBuildCard(p, i){
   const liked    = p.is_liked||false;
   const likeCount    = p.like_count||0;
   const commentCount = p.comment_count||0;
-  const statusHtml = p.status==='open'
-    ? `<span class="pc-status st-open"><span class="status-dot"></span>Ouvert</span>`
-    : `<span class="pc-status st-done"><span class="status-dot"></span>Terminé</span>`;
-  const roleBadge = isOwner
-    ? `<span class="role-badge-owner"><i class="fa-solid fa-crown"></i> Créateur</span>`
-    : `<span class="role-badge-contrib"><i class="fa-solid fa-users"></i> Contributeur</span>`;
-  // avatar set via DOM after innerHTML to avoid base64 breaking template literals
+  const avHtml = owner.image ? `<img src="${owner.image}" alt="">` : initials;
   const imgSection = p.image
     ? `<div class="pc-img-wrap"><img class="pc-img lb-trigger" src="${p.image}" alt="" loading="lazy" onclick="openLightbox(this.src,'${(p.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
     : '';
-  // meAv set via DOM below
+  const meAv = ME_PROF.image ? `<img src="${ME_PROF.image}" alt="">` : pGetInitials(ME_PROF.firstname, ME_PROF.lastname);
   const el = document.createElement('div');
   el.className = 'project-card lk-card';
   el.style.animationDelay = (i*80)+'ms';
   el.dataset.projectId = p.id;
   el.innerHTML = `
     <div class="lk-header" onclick="window.location.href='profile.php?id=${owner.id||0}'" style="cursor:pointer">
-      <div class="pch-av" id="pch-av-${p.id}"></div>
+      <div class="pch-av">${avHtml}</div>
       <div class="pch-info">
         <div class="pch-name">${owner.firstname} ${owner.lastname}</div>
         <div class="pch-meta"><span>${owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
       </div>
       <span class="pc-cat-badge ${catClass}">${catLabel}</span>
-      ${roleBadge}
     </div>
     <div class="lk-body">
       <div class="pc-title">${p.title}</div>
       ${p.description ? `<p class="pc-desc">${p.description}</p>` : ''}
-      <div class="lk-meta-row">${statusHtml}</div>
     </div>
     ${imgSection}
     <div class="lk-stats-bar">
@@ -656,7 +628,7 @@ function pBuildCard(p, i){
     </div>
     <div class="lk-comments-panel" id="pcmt-panel-${p.id}" style="display:none">
       <div class="lk-cmt-input-row">
-        <div class="lk-cmt-av" id="pcmt-meav-${p.id}"></div>
+        <div class="lk-cmt-av">${meAv}</div>
         <div class="lk-cmt-input-wrap">
           <input class="lk-cmt-input" id="pcmt-input-${p.id}" type="text" placeholder="Écrire un commentaire…" onkeydown="if(event.key==='Enter')pSubmitComment(${p.id})">
           <button class="lk-cmt-send" onclick="pSubmitComment(${p.id})"><i class="fa-solid fa-paper-plane"></i></button>
@@ -664,31 +636,6 @@ function pBuildCard(p, i){
       </div>
       <div class="lk-cmt-list" id="pcmt-list-${p.id}"><div class="lk-cmt-loading"><i class="fa-solid fa-spinner fa-spin"></i></div></div>
     </div>`;
-  // Set owner avatar via DOM to safely handle base64 image strings
-  const avDiv = el.querySelector('#pch-av-'+p.id);
-  if (avDiv) {
-    if (owner.image) {
-      const img = document.createElement('img');
-      img.src = owner.image;
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
-      img.onerror = function(){ avDiv.textContent = initials; };
-      avDiv.appendChild(img);
-    } else {
-      avDiv.textContent = initials;
-    }
-  }
-  // Set current user avatar in comment input via DOM
-  const meAvDiv = el.querySelector('#pcmt-meav-'+p.id);
-  if (meAvDiv) {
-    if (ME_PROF.image) {
-      const img = document.createElement('img');
-      img.src = ME_PROF.image;
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
-      meAvDiv.appendChild(img);
-    } else {
-      meAvDiv.textContent = pGetInitials(ME_PROF.firstname, ME_PROF.lastname);
-    }
-  }
   return el;
 }
 
@@ -787,9 +734,7 @@ async function pDeleteComment(projectId, commentId){
 
 // ─── INIT FEED ───
 window.addEventListener('DOMContentLoaded', function(){
-  pRenderFeed(PROF_OWNED,   'feed-owned');
-  pRenderFeed(PROF_CONTRIB, 'feed-contrib');
-  pRenderFeed(PROF_ALL,     'feed-all');
+  pRenderFeed(PROF_ALL, 'feed-projects');
 });
 
 <?php if($isOwnProfile): ?>
