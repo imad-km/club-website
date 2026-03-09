@@ -1,4 +1,7 @@
 <?php
+ob_start();
+@ini_set('display_errors','0');
+@ini_set('log_errors','1');
 require_once 'includes/config.php';
 require_once 'includes/api_helper.php';
 session_start();
@@ -16,57 +19,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
     if (!$pl) {
 
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) { header('Content-Type: application/json'); echo json_encode(['error'=>'invalid']); exit(); }
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) { ob_clean(); header('Content-Type: application/json'); echo json_encode(['error'=>'invalid']); exit(); }
         header('Location: dashboard.php?err=invalid'); exit();
     }
     $action = $pl['_action'] ?? '';
     $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']);
     if ($action === 'toggle_like') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/like', []);
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode(['liked'=>$r['data']['liked']??false,'like_count'=>$r['data']['like_count']??0,'error'=>$r['data']['error']??null]);
         exit();
     } elseif ($action === 'add_comment') {
         $r = api_post('/projects/'.(int)($pl['id']??0).'/comments', ['content'=>$pl['content']??'']);
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode(['comment'=>$r['data']['comment']??null,'error'=>$r['data']['error']??null]);
         exit();
     } elseif ($action === 'delete_comment') {
         $r = api_delete('/projects/'.(int)($pl['project_id']??0).'/comments/'.(int)($pl['comment_id']??0));
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode(['ok'=>($r['code']===200||$r['code']===204),'error'=>$r['data']['error']??null]);
         exit();
     } elseif ($action === 'toggle_follow') {
         $r = api_post('/users/'.(int)($pl['id']??0).'/follow', []);
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode(['following'=>$r['data']['following']??false,'followers_count'=>$r['data']['followers_count']??0,'error'=>$r['data']['error']??null]);
         exit();
     } elseif ($action === 'load_comments') {
         $r = api_get('/projects/'.(int)($pl['id']??0).'/comments');
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
 
     } elseif ($action === 'search') {
         $r = api_post('/search', ['name'=>$pl['name']??'']);
-        header('Content-Type: application/json');
-        echo json_encode($r['data']);
+        ob_clean(); header('Content-Type: application/json');
+        $d = $r['data'] ?? [];
+        if (isset($d['results']) && is_array($d['results'])) { echo json_encode(['results'=>$d['results']]); }
+        elseif (isset($d['users']) && is_array($d['users'])) { echo json_encode(['results'=>$d['users']]); }
+        elseif (isset($d['members']) && is_array($d['members'])) { echo json_encode(['results'=>$d['members']]); }
+        elseif (is_array($d) && isset($d[0])) { echo json_encode(['results'=>$d]); }
+        else { echo json_encode(['results'=>[], '_raw'=>$d, '_code'=>$r['code']]); }
         exit();
     } elseif ($action === 'get_user_info') {
         $r = api_post('/info', ['id'=>(int)($pl['id']??0)]);
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
     } elseif ($action === 'get_uni_posts') {
         $lang = in_array($pl['lang']??'', ['fr','en']) ? $pl['lang'] : '';
         $r = api_get('/getinfo'.($lang ? '?lang='.$lang : ''));
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
     } elseif ($action === 'get_uni_post') {
         $lang = in_array($pl['lang']??'', ['fr','en']) ? $pl['lang'] : '';
         $r = api_get('/getsuperinfo/'.(int)($pl['id']??0).($lang ? '?lang='.$lang : ''));
-        header('Content-Type: application/json');
+        ob_clean(); header('Content-Type: application/json');
         echo json_encode($r['data']);
         exit();
     } elseif ($action === 'join_project') {
@@ -719,7 +727,9 @@ async function _postAjax(payload){
   fd.append('_imadenc',_aes(payload));
   fd.append('_dok',_aes({t:Date.now()}));
   const r=await fetch('dashboard.php',{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:fd});
-  return r.json();
+  const text=await r.text();
+  try{return JSON.parse(text);}
+  catch(e){console.error('Non-JSON ['+(payload._action||'?')+']:', text.substring(0,300));throw new Error('non-json');}
 }
 
 async function toggleLike(btn, projectId){
