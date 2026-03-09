@@ -17,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pw    = $pl['k'] ?? '';
             if (strlen($pw) < 6) { $err = 'Password must be at least 6 characters'; $step = 'form'; }
             else {
-                $data = array_filter(['firstname'=>trim($pl['fn']??''),'lastname'=>trim($pl['ln']??''),'email'=>$email,'phone'=>trim($pl['ph']??''),'password'=>$pw,'image'=>$pl['img']??null,'grade'=>strtolower(trim($pl['gr']??'')),'domain'=>strtolower(trim($pl['dm']??''))], fn($v) => $v !== '' && $v !== null);
-                $ch = curl_init('http://173.249.28.246:8090/api/v1/student/pre-register');
+                $data = array_filter(['firstname'=>trim($pl['fn']??''),'lastname'=>trim($pl['ln']??''),'email'=>$email,'phone'=>trim($pl['ph']??''),'password'=>$pw,'image'=>$pl['img']??null,'grade'=>trim($pl['gr']??''),'domain'=>strtolower(trim($pl['dm']??''))], fn($v) => $v !== '' && $v !== null);
+                $ch = curl_init('http://173.249.28.246:8090/api/v1/client/pre-register');
                 curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode($data),CURLOPT_TIMEOUT=>15]);
                 $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
                 $r=json_decode($body,true)??[];
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else {
             $email = trim($pl['email']??'');
             $otp   = trim($pl['otp']??'');
-            $ch = curl_init('http://173.249.28.246:8090/api/v1/student/verify-otp');
+            $ch = curl_init('http://173.249.28.246:8090/api/v1/client/verify-otp');
             curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>$email,'otp'=>$otp]),CURLOPT_TIMEOUT=>15]);
             $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             $r=json_decode($body,true)??[];
@@ -130,9 +130,10 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
           <label>Grade</label>
           <select id="f_gr" required>
             <option value="" disabled selected>Select grade</option>
-            <option value="licence">Licence</option>
-            <option value="master">Master</option>
-            <option value="doctorat">Doctorat</option>
+            <option value="Student">Student</option>
+            <option value="Professor">Professor</option>
+            <option value="Researcher">Researcher</option>
+            <option value="Company manager">Company Manager</option>
           </select>
         </div>
         <div class="reg-field">

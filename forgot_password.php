@@ -11,7 +11,7 @@ $ok    = '';
 $email = '';
 
 // ── Role: student (can extend to professor later) ───────────────────────────
-$role     = 'student';
+$role     = 'client';
 $api_base = 'http://173.249.28.246:8090/api/v1';
 
 function api_call(string $path, array $payload): array {

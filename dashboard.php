@@ -292,6 +292,10 @@ if (isset($_GET['msg'])) {
     <div class="search-dropdown" id="search-dropdown"></div>
   </div>
   <div class="nav-right">
+    <button class="nav-mob-search-btn" onclick="openMobileSearch()" style="display:none;background:none;border:none;cursor:pointer;padding:6px 8px;color:var(--text);font-size:1.1rem;align-items:center;justify-content:center;border-radius:8px;">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+    <style>@media(max-width:768px){.nav-mob-search-btn{display:flex!important;}.nav-search{display:none!important;}}</style>
 
     <div class="nav-av" id="nav-av-btn" onclick="window.location.href='profile.php'">
       <?php if($me['image']): ?>
@@ -397,7 +401,7 @@ if (isset($_GET['msg'])) {
         </div>
         <div>
           <div class="pm-name"><?= htmlspecialchars($me['firstname'] . ' ' . $me['lastname']) ?></div>
-          <div class="pm-role"><?= htmlspecialchars(ucfirst($me['grade'] ?? '')) ?> · <?= htmlspecialchars($me['domain'] ?? '') ?></div>
+          <div class="pm-role"><?= htmlspecialchars(!empty($me['grade']) ? $me['grade'] : 'Admin') ?><?= !empty($me['domain']) ? ' · ' . htmlspecialchars($me['domain']) : '' ?></div>
         </div>
       </div>
       <div class="stats-row">
@@ -804,7 +808,7 @@ function renderTopStudents(){
   const myCount=PROJECTS.filter(p=>p.owner.id&&ME.id?p.owner.id===ME.id:(p.owner.firstname===ME.firstname&&p.owner.lastname===ME.lastname)).length;
   document.getElementById('my-proj-count').textContent=myCount;
   if(!sorted.length){list.innerHTML='<div style="padding:12px 18px;font-size:.8rem;color:var(--muted)">Aucun projet encore.</div>';return;}
-  list.innerHTML=sorted.map(([k,c],i)=>{const o=ownerMap[k];const av=o.image?`<img src="${o.image}" alt="">`:getInitials(o.firstname,o.lastname);const grade=(o.grade||'').trim().toLowerCase();const isProf=!grade||grade==='professor';const badgeClass=isProf?'tb-prof':i===0?'tb-o':'tb-g';const gradeLabel=isProf?'Professeur':grade.charAt(0).toUpperCase()+grade.slice(1);return`<div class="top-student" onclick="window.location.href='profile.php?id=${o.id||''}'"><div class="ts-rank ${i===0?'rank-1':''}">${i+1}</div><div class="ts-av">${av}</div><div class="ts-info"><div class="ts-name">${o.firstname} ${o.lastname}</div><div class="ts-count">${c} projet${c>1?'s':''}</div></div><span class="ts-badge ${badgeClass}">${gradeLabel}</span></div>`;}).join('');
+  list.innerHTML=sorted.map(([k,c],i)=>{const o=ownerMap[k];const av=o.image?`<img src="${o.image}" alt="">`:getInitials(o.firstname,o.lastname);const grade=(o.grade||'').trim().toLowerCase();const isProf=!grade||grade==='professor';const badgeClass=isProf?'tb-prof':i===0?'tb-o':'tb-g';const gradeLabel=!grade?'Admin':grade.charAt(0).toUpperCase()+grade.slice(1);return`<div class="top-student" onclick="window.location.href='profile.php?id=${o.id||''}'"><div class="ts-rank ${i===0?'rank-1':''}">${i+1}</div><div class="ts-av">${av}</div><div class="ts-info"><div class="ts-name">${o.firstname} ${o.lastname}</div><div class="ts-count">${c} projet${c>1?'s':''}</div></div><span class="ts-badge ${badgeClass}">${gradeLabel}</span></div>`;}).join('');
 }
 
 function renderAnnouncements(){

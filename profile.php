@@ -85,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['saved'])) $success = 'Profil mis à jour avec succès !';
 
 $targetId = isset($_GET['id']) ? (int)$_GET['id'] : null;
-$isOwnProfile = !$targetId;
+$myOwnId = (int)($me['id'] ?? $me['user_id'] ?? $me['student_id'] ?? 0);
+$isOwnProfile = !$targetId || ($myOwnId > 0 && $targetId === $myOwnId);
 
 // Follow state defaults
 $isFollowing    = false;
@@ -95,7 +96,7 @@ $followingCount = 0;
 if ($isOwnProfile) {
     $subject  = $me;
     // Try all possible ID field names the API might use
-    $myId = (int)($me['id'] ?? $me['user_id'] ?? $me['student_id'] ?? 0);
+    $myId = $myOwnId;
 
     if ($myId > 0) {
         // Fetch projects via /info with own ID — same endpoint used for other profiles
@@ -398,8 +399,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
         <button class="btn-edit" onclick="openEditModal()">
           <i class="fa-solid fa-pen"></i> Modifier le profil
         </button>
-        <?php if(strtolower($me['perm'] ?? '') === 'professor'): ?>
-          <a class="btn-admin" href="/professor/index.php?token=<?= urlencode($_SESSION['access'] ?? '') ?>">
+        <?php if(strtolower($me['perm'] ?? '') === 'admin'): ?>
+          <a class="btn-admin" href="/admin/index.php?token=<?= urlencode($_SESSION['access'] ?? '') ?>">
             <i class="fa-solid fa-shield-halved"></i> Admin
           </a>
         <?php endif; ?>
@@ -425,7 +426,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
     <div class="p-domain"><i class="fa-solid fa-microchip"></i> <?= $domainDisplay ?></div>
     <div class="p-meta-chips">
       <?php
-        $gradeDisplay = !empty($subject['grade']) ? ucfirst($subject['grade']) : 'Professeur';
+        $gradeDisplay = !empty($subject['grade']) ? $subject['grade'] : 'Admin';
         $emailDisplay = '';
         if (!empty($subject['email']) && strpos($subject['email'],'@') !== false) {
             [$local,$dom] = explode('@',$subject['email'],2);
@@ -523,7 +524,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
         </div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input type="email" class="form-input" id="f-email" value="<?= htmlspecialchars($me['email']??'') ?>">
+          <input type="email" class="form-input" id="f-email" value="<?= htmlspecialchars($me['email']??'') ?>" readonly style="background:#f0f0f0;color:var(--muted);cursor:not-allowed;border-color:var(--border);">
         </div>
         <div class="form-group">
           <label class="form-label">Téléphone</label>
@@ -533,9 +534,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
           <div class="form-group">
             <label class="form-label">Grade</label>
             <select class="form-select" id="f-grade">
-              <option value="licence"  <?= ($me['grade']==="licence") ?"selected":"" ?>>Licence</option>
-              <option value="master"   <?= ($me['grade']==="master")  ?"selected":"" ?>>Master</option>
-              <option value="doctorat" <?= ($me['grade']==="doctorat")?"selected":"" ?>>Doctorat</option>
+              <option value="Student"         <?= ($me['grade']==="Student")          ?"selected":"" ?>>Student</option>
+              <option value="Professor"       <?= ($me['grade']==="Professor")        ?"selected":"" ?>>Professor</option>
+              <option value="Researcher"      <?= ($me['grade']==="Researcher")       ?"selected":"" ?>>Researcher</option>
+              <option value="Company manager" <?= ($me['grade']==="Company manager")  ?"selected":"" ?>>Company Manager</option>
             </select>
           </div>
           <div class="form-group">
@@ -793,7 +795,6 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
   var pl={
     firstname: document.getElementById('f-fn').value,
     lastname:  document.getElementById('f-ln').value,
-    email:     document.getElementById('f-email').value,
     phone:     document.getElementById('f-phone').value,
     grade:     document.getElementById('f-grade').value,
     domain:    document.getElementById('f-domain').value

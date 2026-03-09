@@ -11,10 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         $email    = trim($pl['e'] ?? '');
         $password = $pl['k'] ?? '';
-        $role     = $pl['role'] ?? 'student';
-        $endpoint = $role === 'professor'
-            ? 'http://173.249.28.246:8090/api/v1/professor/login'
-            : 'http://173.249.28.246:8090/api/v1/student/login';
+        $role     = $pl['role'] ?? 'client';
+        $endpoint = $role === 'admin'
+            ? 'http://173.249.28.246:8090/api/v1/admin/login'
+            : 'http://173.249.28.246:8090/api/v1/client/login';
 
         $ch = curl_init($endpoint);
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>$email,'password'=>$password]),CURLOPT_TIMEOUT=>15]);
@@ -78,11 +78,11 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
     <p class="auth-sub">Access your student dashboard.</p>
 
     <div class="role-toggle">
-      <button type="button" class="role-btn active" id="btn-student" onclick="setRole('student')">
+      <button type="button" class="role-btn active" id="btn-client" onclick="setRole('client')">
         <i class="fa-solid fa-graduation-cap"></i> Student
       </button>
-      <button type="button" class="role-btn" id="btn-professor" onclick="setRole('professor')">
-        <i class="fa-solid fa-chalkboard-user"></i> Professor
+      <button type="button" class="role-btn" id="btn-admin" onclick="setRole('admin')">
+        <i class="fa-solid fa-chalkboard-user"></i> Admin
       </button>
     </div>
 
@@ -93,7 +93,7 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
     <form method="POST" action="" id="loginForm">
       <input type="hidden" name="_imadenc" id="_imadenc"/>
       <input type="hidden" name="_dok" id="_dok"/>
-      <input type="hidden" id="f_role" value="student"/>
+      <input type="hidden" id="f_role" value="client"/>
 
       <div class="auth-field">
         <label>Email</label>
@@ -131,10 +131,10 @@ function _aes(obj) {
 }
 function setRole(role) {
   document.getElementById('f_role').value = role;
-  document.getElementById('btn-student').classList.toggle('active', role === 'student');
-  document.getElementById('btn-professor').classList.toggle('active', role === 'professor');
-  document.querySelector('.auth-sub').textContent = role === 'professor'
-    ? 'Access your professor dashboard.'
+  document.getElementById('btn-client').classList.toggle('active', role === 'client');
+  document.getElementById('btn-admin').classList.toggle('active', role === 'admin');
+  document.querySelector('.auth-sub').textContent = role === 'admin'
+    ? 'Access your admin dashboard.'
     : 'Access your student dashboard.';
 }
 document.getElementById('loginForm').addEventListener('submit', function(e) {

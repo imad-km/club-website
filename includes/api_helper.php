@@ -51,13 +51,13 @@ function api_post(string $path, array $payload): array {
  */
 function require_auth(): array {
     if (!isset($_SESSION['access'])) {
-        header('Location: student_login.php');
+        header('Location: login.php');
         exit();
     }
     $r = api_get('/me');
     if ($r['code'] !== 200) {
         session_destroy();
-        header('Location: student_login.php');
+        header('Location: login.php');
         exit();
     }
     return $r['data'];
