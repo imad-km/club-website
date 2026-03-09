@@ -9,8 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pl = check_request();
     if (!$pl) { $err = 'Invalid request'; }
     else {
-        $ch = curl_init('http://173.249.28.246:8090/api/v1/student/login');
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>trim($pl['e']??''),'password'=>$pl['k']??'']),CURLOPT_TIMEOUT=>15]);
+        $email    = trim($pl['e'] ?? '');
+        $password = $pl['k'] ?? '';
+        $role     = $pl['role'] ?? 'student';
+        $endpoint = $role === 'professor'
+            ? 'http://173.249.28.246:8090/api/v1/professor/login'
+            : 'http://173.249.28.246:8090/api/v1/student/login';
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode(['email'=>$email,'password'=>$password]),CURLOPT_TIMEOUT=>15]);
         $body=curl_exec($ch);$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
         $r=json_decode($body,true)??[];
         if($code===200&&isset($r['user']['access'])){$_SESSION['access']=$r['user']['access'];$_SESSION['refresh']=$r['user']['refresh'];header('Location: dashboard.php');exit();}
@@ -27,7 +34,15 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
 <title>Sign In — AI House · Hassiba Benbouali</title>
 <link rel="stylesheet" href="css/global.css"/>
 <link rel="stylesheet" href="css/auth.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+.role-toggle{display:flex;gap:0;background:var(--fog);border:1.5px solid var(--line);border-radius:10px;padding:4px;margin-bottom:24px;}
+.role-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border:none;background:transparent;border-radius:7px;font-family:'DM Sans',system-ui,sans-serif;font-size:.85rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;}
+.role-btn i{font-size:.82rem;}
+.role-btn.active{background:var(--white);color:var(--dark);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.role-btn:not(.active):hover{color:var(--text);}
+</style>
 </head>
 <body class="auth-body">
 
@@ -62,6 +77,15 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
     <h2>Sign in</h2>
     <p class="auth-sub">Access your student dashboard.</p>
 
+    <div class="role-toggle">
+      <button type="button" class="role-btn active" id="btn-student" onclick="setRole('student')">
+        <i class="fa-solid fa-graduation-cap"></i> Student
+      </button>
+      <button type="button" class="role-btn" id="btn-professor" onclick="setRole('professor')">
+        <i class="fa-solid fa-chalkboard-user"></i> Professor
+      </button>
+    </div>
+
     <?php if($err): ?>
       <div class="auth-err"><?= htmlspecialchars($err) ?></div>
     <?php endif; ?>
@@ -69,6 +93,7 @@ $AES_KEY_HEX = bin2hex(AES_FINAL_KEY);
     <form method="POST" action="" id="loginForm">
       <input type="hidden" name="_imadenc" id="_imadenc"/>
       <input type="hidden" name="_dok" id="_dok"/>
+      <input type="hidden" id="f_role" value="student"/>
 
       <div class="auth-field">
         <label>Email</label>
@@ -104,9 +129,17 @@ function _aes(obj) {
   var enc = CryptoJS.AES.encrypt(JSON.stringify(obj), _K, {iv:iv,mode:CryptoJS.mode.CBC,padding:CryptoJS.pad.Pkcs7});
   return CryptoJS.enc.Base64.stringify(iv.concat(enc.ciphertext));
 }
+function setRole(role) {
+  document.getElementById('f_role').value = role;
+  document.getElementById('btn-student').classList.toggle('active', role === 'student');
+  document.getElementById('btn-professor').classList.toggle('active', role === 'professor');
+  document.querySelector('.auth-sub').textContent = role === 'professor'
+    ? 'Access your professor dashboard.'
+    : 'Access your student dashboard.';
+}
 document.getElementById('loginForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  document.getElementById('_imadenc').value = _aes({e:document.getElementById('f_e').value, k:document.getElementById('f_k').value});
+  document.getElementById('_imadenc').value = _aes({e:document.getElementById('f_e').value, k:document.getElementById('f_k').value, role:document.getElementById('f_role').value});
   document.getElementById('_dok').value = _aes({t:Date.now()});
   this.submit();
 });

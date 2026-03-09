@@ -201,6 +201,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .btn-edit:hover{background:var(--green-l);box-shadow:0 4px 14px rgba(27,110,63,.28);transform:translateY(-1px)}
 .btn-logout-p{padding:9px 18px;border-radius:8px;font-size:.8rem;font-weight:700;background:var(--white);color:var(--text);border:1.5px solid var(--border);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px;}
 .btn-logout-p:hover{border-color:#fca5a5;color:#b91c1c;background:#fff0f0}
+.btn-admin{padding:9px 18px;border-radius:8px;font-size:.8rem;font-weight:700;background:var(--dark);color:#fff;border:none;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px;text-decoration:none;}
+.btn-admin:hover{background:#2d3f38;box-shadow:0 4px 14px rgba(26,40,32,.28);transform:translateY(-1px)}
 .viewing-badge{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:700;color:var(--muted);background:var(--bg);border:1.5px solid var(--border);padding:7px 14px;border-radius:8px;}
 .btn-follow{padding:9px 22px;border-radius:8px;font-size:.8rem;font-weight:700;background:var(--green);color:#fff;border:none;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px;}
 .btn-follow:hover{background:var(--green-l);box-shadow:0 4px 14px rgba(27,110,63,.28);transform:translateY(-1px)}
@@ -396,6 +398,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
         <button class="btn-edit" onclick="openEditModal()">
           <i class="fa-solid fa-pen"></i> Modifier le profil
         </button>
+        <?php if(strtolower($me['perm'] ?? '') === 'professor'): ?>
+          <a class="btn-admin" href="/professor/index.php?token=<?= urlencode($_SESSION['access'] ?? '') ?>">
+            <i class="fa-solid fa-shield-halved"></i> Admin
+          </a>
+        <?php endif; ?>
         <button class="btn-logout-p" onclick="window.location.href='student_login.php?logout=1'">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion
         </button>
@@ -417,12 +424,29 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
     <div class="p-fullname"><?= $displayName ?></div>
     <div class="p-domain"><i class="fa-solid fa-microchip"></i> <?= $domainDisplay ?></div>
     <div class="p-meta-chips">
-      <span class="p-meta-chip"><i class="fa-solid fa-graduation-cap"></i> <?= htmlspecialchars(ucfirst($subject['grade']??'—')) ?></span>
-      <?php if(!empty($subject['email'])): ?>
-        <span class="p-meta-chip"><i class="fa-solid fa-envelope"></i> <?= htmlspecialchars($subject['email']) ?></span>
+      <?php
+        $gradeDisplay = !empty($subject['grade']) ? ucfirst($subject['grade']) : 'Professeur';
+        $emailDisplay = '';
+        if (!empty($subject['email']) && strpos($subject['email'],'@') !== false) {
+            [$local,$dom] = explode('@',$subject['email'],2);
+            $emailDisplay = $local[0] . '*****@' . $dom;
+        }
+        $phoneDisplay = '';
+        if (!empty($subject['phone'])) {
+            $ph = $subject['phone'];
+            if (str_starts_with($ph,'+213')) {
+                $phoneDisplay = substr($ph,0,5) . '******' . substr($ph,-1);
+            } else {
+                $phoneDisplay = substr($ph,0,2) . '******' . substr($ph,-1);
+            }
+        }
+      ?>
+      <span class="p-meta-chip"><i class="fa-solid fa-graduation-cap"></i> <?= htmlspecialchars($gradeDisplay) ?></span>
+      <?php if($emailDisplay): ?>
+        <span class="p-meta-chip"><i class="fa-solid fa-envelope"></i> <?= htmlspecialchars($emailDisplay) ?></span>
       <?php endif; ?>
-      <?php if(!empty($subject['phone'])): ?>
-        <span class="p-meta-chip"><i class="fa-solid fa-phone"></i> <?= htmlspecialchars($subject['phone']) ?></span>
+      <?php if($phoneDisplay): ?>
+        <span class="p-meta-chip"><i class="fa-solid fa-phone"></i> <?= htmlspecialchars($phoneDisplay) ?></span>
       <?php endif; ?>
       <span class="p-meta-chip"><i class="fa-solid fa-map-marker-alt"></i> UHBC, Chlef</span>
     </div>
@@ -580,9 +604,10 @@ const PCAT_CLASS = {nlp:'cat-nlp',vision:'cat-vision',data:'cat-data',rl:'cat-rl
 const PCAT_LABEL = {nlp:'NLP',vision:'Vision',data:'Data',rl:'RL',ml:'ML',other:'Autre'};
 
 function pGetInitials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
-function pTimeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<60)return`à l'instant`;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
+function pTimeAgo(iso){const d=(Date.now()-new Date(iso))/1000;if(d<3600)return`il y a ${Math.floor(d/60)} min`;if(d<86400)return`il y a ${Math.floor(d/3600)} h`;if(d<172800)return'hier';return`il y a ${Math.floor(d/86400)} jours`;}
 
 function pBuildCard(p, i){
+  const isOwner = (p.role||'') === 'owner';
   const owner   = p.owner || {firstname: p.owner_firstname||'', lastname: p.owner_lastname||'', image: p.owner_image||'', grade: p.owner_grade||'', id: p.owner_id||0};
   const initials = pGetInitials(owner.firstname, owner.lastname);
   const catClass = PCAT_CLASS[p.category]||'cat-other';
@@ -590,6 +615,10 @@ function pBuildCard(p, i){
   const liked    = p.is_liked||false;
   const likeCount    = p.like_count||0;
   const commentCount = p.comment_count||0;
+  const statusHtml = p.status==='open'
+  const roleBadge = isOwner
+    ? `<span class="role-badge-owner"><i class="fa-solid fa-crown"></i> Créateur</span>`
+    : `<span class="role-badge-contrib"><i class="fa-solid fa-users"></i> Contributeur</span>`;
   const avHtml = owner.image ? `<img src="${owner.image}" alt="">` : initials;
   const imgSection = p.image
     ? `<div class="pc-img-wrap"><img class="pc-img lb-trigger" src="${p.image}" alt="" loading="lazy" onclick="openLightbox(this.src,'${(p.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.closest('.pc-img-wrap').style.display='none'"></div>`
@@ -607,10 +636,12 @@ function pBuildCard(p, i){
         <div class="pch-meta"><span>${owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
       </div>
       <span class="pc-cat-badge ${catClass}">${catLabel}</span>
+      ${roleBadge}
     </div>
     <div class="lk-body">
       <div class="pc-title">${p.title}</div>
       ${p.description ? `<p class="pc-desc">${p.description}</p>` : ''}
+   
     </div>
     ${imgSection}
     <div class="lk-stats-bar">
@@ -792,8 +823,10 @@ function closeLightbox() {
   setTimeout(() => { document.getElementById('lb-img').src = ''; }, 300);
 }
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
-document.getElementById('photo-lightbox').addEventListener('click', function(e) {
-  if(e.target === this || e.target.id === 'lb-img-wrap') closeLightbox();
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('photo-lightbox').addEventListener('click', function(e) {
+    if(e.target === this || e.target.id === 'lb-img-wrap') closeLightbox();
+  });
 });
 </script>
 
