@@ -17,6 +17,38 @@ $__logged = isset($_SESSION['access']) ? 'true' : 'false';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+.hero-tagline { margin-bottom: 18px; margin-top: 18px; }
+.ht-ar, .ht-fr, .ht-en {
+    display: none;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    animation: taglineIn .6s cubic-bezier(.16,1,.3,1) forwards;
+}
+.ht-ar {
+    font-family: 'Cairo', sans-serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.7rem);
+    color: #fff;
+    direction: rtl;
+    text-align: right;
+}
+.ht-fr {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    color: #fff;
+}
+.ht-en {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(.95rem, 2vw, 1.35rem);
+    font-weight: 700;
+    color: #fff;
+}
+@keyframes taglineIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.lang-ar .ht-ar { display: block; }
+.lang-fr .ht-fr { display: block; }
+.lang-en .ht-en { display: block; }
+</style>
 </head>
 
 <body style="direction: ltr;">
@@ -105,10 +137,11 @@ $__logged = isset($_SESSION['access']) ? 'true' : 'false';
                     <span class="ht-o" data-i18n="artificielle">Artificielle</span>
                 </h1>
 
-                <p class="hero-sub" data-i18n="un_espace_physique_et_virtuel_dedie_a_le">
-                    Un espace physique et virtuel dédié à l'exploration, la recherche et l'innovation en IA —
-                    au service des étudiants, chercheurs et partenaires industriels.
-                </p>
+                <div class="hero-tagline" id="hero-tagline">
+                    <div class="ht-ar" data-i18n-tagline="ar">حيث يلتقي الذكاء… ليصنع المستقبل</div>
+                    <div class="ht-fr" data-i18n-tagline="fr">Là où l'intelligence… façonne l'avenir</div>
+                    <div class="ht-en" data-i18n-tagline="en">Where intelligence… shapes the future</div>
+                </div>
 
                 <div class="hero-actions">
                     <button class="btn-hero-primary" onclick="window.location.href='/login.php'" data-i18n="rejoindre_la_communaute">Rejoindre

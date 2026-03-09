@@ -1444,6 +1444,8 @@ function setLang(lang) {
   document.documentElement.lang = lang;
   document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
   document.body.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+  document.body.classList.remove('lang-ar','lang-fr','lang-en');
+  document.body.classList.add('lang-' + lang);
   var accent = document.querySelector('.accent');
   if (accent) accent.style.display = lang === 'ar' ? 'none' : 'inline';
   document.querySelectorAll('.sf-lang-btn, .pf-lang-btn').forEach(function(btn) {
