@@ -244,6 +244,26 @@ if (isset($_GET['msg'])) {
 #photo-lightbox.lb-open #lb-caption{display:block;}
 .lb-trigger{cursor:zoom-in!important;}
 .tb-prof{background:#f3e8ff;color:#7c3aed;}
+
+/* ─── TOP MEMBERS ─── */
+.top-member{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer;transition:background .15s;border-radius:0;}
+.top-member:hover{background:var(--fog);}
+.ts-rank{width:18px;font-size:.72rem;font-weight:800;color:var(--muted);flex-shrink:0;text-align:center;}
+.ts-rank.rank-1{color:#f59e0b;}
+.ts-rank.rank-2{color:#94a3b8;}
+.ts-rank.rank-3{color:#cd7c3a;}
+.ts-av{width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;overflow:hidden;flex-shrink:0;border:2px solid var(--green-m);}
+.ts-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.ts-info{flex:1;min-width:0;}
+.ts-name{font-size:.83rem;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ts-count{font-size:.71rem;color:var(--muted);margin-top:1px;}
+.ts-badge{font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;}
+.tb-o{background:#fff7ed;color:#c2410c;}
+.tb-g{background:var(--green-p);color:var(--green);}
+.tb-admin{background:#f3e8ff;color:#7c3aed;}
+.tb-researcher{background:#eff6ff;color:#1d4ed8;}
+.tb-company{background:#fef9c3;color:#a16207;}
+.tb-student{background:var(--green-p);color:var(--green);}
 .ff-cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .ff-sort-row{display:flex;gap:6px;flex-wrap:wrap;}
 .ff-sort-btn{
@@ -286,7 +306,7 @@ if (isset($_GET['msg'])) {
   </a>
   <div class="nav-search" id="nav-search-wrap">
     <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
-    <input type="text" id="student-search" placeholder="Rechercher un member…" autocomplete="off"
+    <input type="text" id="member-search" placeholder="Rechercher un member…" autocomplete="off"
       oninput="handleSearch(this.value)" onfocus="openDropdown()" onblur="closeDropdownDelayed()">
     <button class="nav-search-clear" id="search-clear" onclick="clearSearch()">✕</button>
     <div class="search-dropdown" id="search-dropdown"></div>
@@ -421,7 +441,7 @@ if (isset($_GET['msg'])) {
         <div class="s-card-title">Top Members</div>
         <span style="font-size:.7rem;color:var(--muted);font-weight:600">ce mois</span>
       </div>
-      <div id="top-students-list" style="padding:6px 0"></div>
+      <div id="top-members-list" style="padding:6px 0"></div>
     </div>
 
     <div class="s-card">
@@ -486,11 +506,11 @@ if (isset($_GET['msg'])) {
   </div>
 </div>
 
-<div class="modal-overlay" id="sp-modal" onclick="if(event.target===this)closeStudentProfile()">
+<div class="modal-overlay" id="sp-modal" onclick="if(event.target===this)closememberProfile()">
   <div class="sp-modal-box">
     <div class="sp-modal-head">
       <div class="sp-modal-title"><i class="fa-solid fa-user" style="color:var(--green);margin-right:8px"></i>Profil Member</div>
-      <button class="modal-close" onclick="closeStudentProfile()">✕</button>
+      <button class="modal-close" onclick="closememberProfile()">✕</button>
     </div>
     <div class="sp-modal-body">
       <div class="sp-loading" id="sp-loading"><div class="sp-spinner"><i class="fa-solid fa-spinner fa-spin"></i></div><div style="font-size:.84rem;color:var(--muted);margin-top:12px">Chargement…</div></div>
@@ -800,15 +820,38 @@ async function toggleFollow(userId,btn){
   }catch(e){showToast('Erreur réseau');}
 }
 
-function renderTopStudents(){
-  const list=document.getElementById('top-students-list');
-  const counts={};PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;counts[k]=(counts[k]||0)+1;});
+function renderTopmembers(){
+  const list=document.getElementById('top-members-list');
+  const counts={};
+  PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;counts[k]=(counts[k]||0)+1;});
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const ownerMap={};PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;ownerMap[k]=p.owner;});
+  const ownerMap={};
+  PROJECTS.forEach(p=>{const k=p.owner.id||p.owner.firstname+'_'+p.owner.lastname;ownerMap[k]=p.owner;});
   const myCount=PROJECTS.filter(p=>p.owner.id&&ME.id?p.owner.id===ME.id:(p.owner.firstname===ME.firstname&&p.owner.lastname===ME.lastname)).length;
   document.getElementById('my-proj-count').textContent=myCount;
   if(!sorted.length){list.innerHTML='<div style="padding:12px 18px;font-size:.8rem;color:var(--muted)">Aucun projet encore.</div>';return;}
-  list.innerHTML=sorted.map(([k,c],i)=>{const o=ownerMap[k];const av=o.image?`<img src="${o.image}" alt="">`:getInitials(o.firstname,o.lastname);const grade=(o.grade||'').trim().toLowerCase();const isProf=!grade||grade==='professor';const badgeClass=isProf?'tb-prof':i===0?'tb-o':'tb-g';const gradeLabel=!grade?'Admin':grade.charAt(0).toUpperCase()+grade.slice(1);return`<div class="top-student" onclick="window.location.href='profile.php?id=${o.id||''}'"><div class="ts-rank ${i===0?'rank-1':''}">${i+1}</div><div class="ts-av">${av}</div><div class="ts-info"><div class="ts-name">${o.firstname} ${o.lastname}</div><div class="ts-count">${c} projet${c>1?'s':''}</div></div><span class="ts-badge ${badgeClass}">${gradeLabel}</span></div>`;}).join('');
+  const rankClass=['rank-1','rank-2','rank-3'];
+  list.innerHTML=sorted.map(([k,c],i)=>{
+    const o=ownerMap[k];
+    const av=o.image?`<img src="${o.image}" alt="">`:getInitials(o.firstname,o.lastname);
+    const grade=(o.grade||'').trim().toLowerCase();
+    let badgeClass,gradeLabel;
+    if(!grade){badgeClass='tb-admin';gradeLabel='Admin';}
+    else if(grade==='professor'){badgeClass='tb-prof';gradeLabel='Professeur';}
+    else if(grade==='researcher'){badgeClass='tb-researcher';gradeLabel='Chercheur';}
+    else if(grade==='company manager'){badgeClass='tb-company';gradeLabel='Manager';}
+    else{badgeClass='tb-student';gradeLabel=o.grade;}
+    const rc=rankClass[i]||'';
+    return`<div class="top-member" onclick="window.location.href='profile.php?id=${o.id||''}'">
+      <div class="ts-rank ${rc}">${i+1}</div>
+      <div class="ts-av">${av}</div>
+      <div class="ts-info">
+        <div class="ts-name">${o.firstname} ${o.lastname}</div>
+        <div class="ts-count">${c} projet${c>1?'s':''}</div>
+      </div>
+      <span class="ts-badge ${badgeClass}">${gradeLabel}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderAnnouncements(){
@@ -856,7 +899,7 @@ async function doSearch(q){try{const data=await _postAjax({_action:'search',name
 function openDropdown(){if(currentSearch)document.getElementById('search-dropdown').classList.add('open');}
 function closeDropdown(){document.getElementById('search-dropdown').classList.remove('open');}
 function closeDropdownDelayed(){setTimeout(closeDropdown,200);}
-function clearSearch(){document.getElementById('student-search').value='';currentSearch='';document.getElementById('search-clear').style.display='none';closeDropdown();}
+function clearSearch(){document.getElementById('member-search').value='';currentSearch='';document.getElementById('search-clear').style.display='none';closeDropdown();}
 function openMobileSearch(){document.getElementById('mob-search-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>document.getElementById('mob-search-input').focus(),100);}
 function closeMobileSearch(){document.getElementById('mob-search-overlay').classList.remove('open');document.getElementById('mob-search-input').value='';document.getElementById('mob-search-results').innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;document.body.style.overflow='';}
 let mobTimer=null;
@@ -919,11 +962,11 @@ function submitCreateProject(){
 }
 
 
-async function openStudentProfile(id){document.getElementById('sp-modal').classList.add('open');document.body.style.overflow='hidden';document.getElementById('sp-loading').style.display='flex';document.getElementById('sp-content').innerHTML='';try{const data=await _postAjax({_action:'get_user_info',id});document.getElementById('sp-loading').style.display='none';renderStudentProfile(data);}catch(e){document.getElementById('sp-loading').style.display='none';document.getElementById('sp-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
-function closeStudentProfile(){document.getElementById('sp-modal').classList.remove('open');document.body.style.overflow='';}
+async function openmemberProfile(id){document.getElementById('sp-modal').classList.add('open');document.body.style.overflow='hidden';document.getElementById('sp-loading').style.display='flex';document.getElementById('sp-content').innerHTML='';try{const data=await _postAjax({_action:'get_user_info',id});document.getElementById('sp-loading').style.display='none';rendermemberProfile(data);}catch(e){document.getElementById('sp-loading').style.display='none';document.getElementById('sp-content').innerHTML=`<div class="empty-state"><div class="es-icon"><i class="fa-solid fa-wifi"></i></div><div class="es-title">Erreur de chargement</div></div>`;}}
+function closememberProfile(){document.getElementById('sp-modal').classList.remove('open');document.body.style.overflow='';}
 const GRADE_LABELS={licence:'Licence',master:'Master',doctorat:'Doctorat'};
 const DOMAIN_LABELS={'intelligence artificielle':'Intelligence Artificielle','developpement web':'Développement Web','cyber securite':'Cyber Sécurité','reseaux et telecommunications':'Réseaux & Télécoms','systemes embarques':'Systèmes Embarqués','science des donnees':'Science des Données','genie logiciel':'Génie Logiciel','autre':'Autre'};
-function renderStudentProfile(data){const u=data.user||{};const projects=data.projects||[];const initials=getInitials(u.firstname||'',u.lastname||'');const avatarHtml=u.image?`<img src="${u.image}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:initials;const joinDate=u.created_at?new Date(u.created_at).toLocaleDateString('fr-FR',{year:'numeric',month:'long'}):'—';const owned=projects.filter(p=>p.role==='owner');const followersCount=data.followers_count??u.followers_count??0;const followingCount=data.following_count??u.following_count??0;const isFollowing=data.is_following||false;const isSelf=u.id===ME.id;const followBtn=!isSelf?`<button class="sp-follow-btn${isFollowing?' sp-following':''}" onclick="toggleFollow(${u.id},this)">${isFollowing?'<i class="fa-solid fa-user-check"></i> Abonné':'<i class="fa-solid fa-user-plus"></i> Suivre'}</button>`:'';document.getElementById('sp-content').innerHTML=`<div class="sp-hero"><div class="sp-avatar">${avatarHtml}</div><div class="sp-hero-info"><div class="sp-name">${u.firstname||''} ${u.lastname||''}</div><div class="sp-grade"><i class="fa-solid fa-graduation-cap"></i>${GRADE_LABELS[u.grade]||u.grade||'—'}</div><div class="sp-domain"><i class="fa-solid fa-microchip"></i>${DOMAIN_LABELS[u.domain]||u.domain||'—'}</div>${followBtn}</div></div><div class="sp-stats"><div class="sp-stat"><div class="sp-stat-val">${owned.length}</div><div class="sp-stat-lbl">Projets</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val" id="sp-followers-count">${followersCount}</div><div class="sp-stat-lbl">Abonnés</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val">${followingCount}</div><div class="sp-stat-lbl">Abonnements</div></div></div><div class="sp-info-section">${u.email?`<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-solid fa-envelope"></i></div><div><div class="sp-info-label">Email</div><div class="sp-info-val">${u.email}</div></div></div>`:''}<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-regular fa-calendar"></i></div><div><div class="sp-info-label">Membre depuis</div><div class="sp-info-val">${joinDate}</div></div></div></div>${projects.length?`<div class="sp-projects-section"><div class="sp-section-title"><i class="fa-solid fa-flask" style="color:var(--green)"></i>Projets (${projects.length})</div>${projects.map(p=>{const catClass=CAT_CLASS[p.category]||'cat-other';const catLabel=CAT_LABEL[p.category]||p.category;const isOwner=p.role==='owner';return`<div class="sp-project-card"><div class="sp-proj-top"><span class="pc-cat-badge ${catClass}">${catLabel}</span></div><div class="sp-proj-title">${p.title}</div>${p.description?`<div class="sp-proj-desc">${p.description}</div>`:''}</div>`;}).join('')}</div>`:`<div class="sp-no-projects"><i class="fa-solid fa-flask"></i><span>Aucun projet pour l'instant</span></div>`}`;}
+function rendermemberProfile(data){const u=data.user||{};const projects=data.projects||[];const initials=getInitials(u.firstname||'',u.lastname||'');const avatarHtml=u.image?`<img src="${u.image}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:initials;const joinDate=u.created_at?new Date(u.created_at).toLocaleDateString('fr-FR',{year:'numeric',month:'long'}):'—';const owned=projects.filter(p=>p.role==='owner');const followersCount=data.followers_count??u.followers_count??0;const followingCount=data.following_count??u.following_count??0;const isFollowing=data.is_following||false;const isSelf=u.id===ME.id;const followBtn=!isSelf?`<button class="sp-follow-btn${isFollowing?' sp-following':''}" onclick="toggleFollow(${u.id},this)">${isFollowing?'<i class="fa-solid fa-user-check"></i> Abonné':'<i class="fa-solid fa-user-plus"></i> Suivre'}</button>`:'';document.getElementById('sp-content').innerHTML=`<div class="sp-hero"><div class="sp-avatar">${avatarHtml}</div><div class="sp-hero-info"><div class="sp-name">${u.firstname||''} ${u.lastname||''}</div><div class="sp-grade"><i class="fa-solid fa-graduation-cap"></i>${GRADE_LABELS[u.grade]||u.grade||'—'}</div><div class="sp-domain"><i class="fa-solid fa-microchip"></i>${DOMAIN_LABELS[u.domain]||u.domain||'—'}</div>${followBtn}</div></div><div class="sp-stats"><div class="sp-stat"><div class="sp-stat-val">${owned.length}</div><div class="sp-stat-lbl">Projets</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val" id="sp-followers-count">${followersCount}</div><div class="sp-stat-lbl">Abonnés</div></div><div class="sp-stat-div"></div><div class="sp-stat"><div class="sp-stat-val">${followingCount}</div><div class="sp-stat-lbl">Abonnements</div></div></div><div class="sp-info-section">${u.email?`<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-solid fa-envelope"></i></div><div><div class="sp-info-label">Email</div><div class="sp-info-val">${u.email}</div></div></div>`:''}<div class="sp-info-row"><div class="sp-info-icon"><i class="fa-regular fa-calendar"></i></div><div><div class="sp-info-label">Membre depuis</div><div class="sp-info-val">${joinDate}</div></div></div></div>${projects.length?`<div class="sp-projects-section"><div class="sp-section-title"><i class="fa-solid fa-flask" style="color:var(--green)"></i>Projets (${projects.length})</div>${projects.map(p=>{const catClass=CAT_CLASS[p.category]||'cat-other';const catLabel=CAT_LABEL[p.category]||p.category;const isOwner=p.role==='owner';return`<div class="sp-project-card"><div class="sp-proj-top"><span class="pc-cat-badge ${catClass}">${catLabel}</span></div><div class="sp-proj-title">${p.title}</div>${p.description?`<div class="sp-proj-desc">${p.description}</div>`:''}</div>`;}).join('')}</div>`:`<div class="sp-no-projects"><i class="fa-solid fa-flask"></i><span>Aucun projet pour l'instant</span></div>`}`;}
 
 
 let uniLoaded=false,uniPosts=[],drawerLang='ar',drawerCurrentId=null;
@@ -1025,7 +1068,7 @@ function mobileTab(tab,btn){document.querySelectorAll('.mn-btn').forEach(b=>b.cl
 
 window.addEventListener('DOMContentLoaded', () => {
   renderFeed();
-  renderTopStudents();
+  renderTopmembers();
   renderSidebarEvents();
   document.getElementById('tab-count-projects').textContent = PROJECTS.length;
   document.getElementById('tab-count-ann').textContent      = ANNOUNCEMENTS.length;
@@ -1033,7 +1076,7 @@ window.addEventListener('DOMContentLoaded', () => {
   <?php if($page_toast): ?>showToast(<?= json_encode($page_toast) ?>);<?php endif; ?>
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeCreateProject(); closeDrawer(); closeStoryViewer(); closeStudentProfile(); closeLightbox(); }
+  if (e.key === 'Escape') { closeCreateProject(); closeDrawer(); closeStoryViewer(); closememberProfile(); closeLightbox(); }
 });
 
 
