@@ -336,6 +336,9 @@ body{display:flex;min-height:100vh;background:var(--fog);font-family:'Sora',sans
 .sb-logout{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.2);background:transparent;color:rgba(239,68,68,.7);font-family:'Sora',sans-serif;font-size:12px;font-weight:500;width:100%;cursor:pointer;transition:all .18s;}
 .sb-logout:hover{background:rgba(239,68,68,.08);color:#f87171;}
 .sb-logout svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.sb-back-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1px solid rgba(77,216,138,.2);background:transparent;color:rgba(77,216,138,.7);font-family:'Sora',sans-serif;font-size:12px;font-weight:500;width:100%;cursor:pointer;transition:all .18s;text-decoration:none;margin-bottom:6px;}
+.sb-back-btn:hover{background:rgba(26,122,74,.15);color:var(--green3);}
+.sb-back-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .sb-invite-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(77,216,138,.25);background:rgba(26,122,74,.15);color:var(--green3);font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;margin-bottom:8px;}
 .sb-invite-btn:hover{background:rgba(26,122,74,.28);border-color:rgba(77,216,138,.45);}
 .sb-invite-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -563,6 +566,10 @@ td{padding:12px 18px;font-size:13px;color:var(--txt);}
       <?php endif; ?>
       <div><div class="sb-prof-name"><?=htmlspecialchars($fullName)?></div><div class="sb-prof-role">Admin</div></div>
     </div>
+    <a href="/dashboard.php" class="sb-back-btn">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="12" x2="21" y2="12"/></svg>
+      Back to Dashboard
+    </a>
     <form method="POST" action="">
       <input type="hidden" name="_act" value="logout"/>
       <button class="sb-logout" type="submit">

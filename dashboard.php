@@ -2,7 +2,7 @@
 require_once 'includes/config.php';
 require_once 'includes/api_helper.php';
 session_start();
-
+require_once 'ai-assistant.php';
 
 function api_delete(string $path): array {
     $token = $_SESSION['access'] ?? '';
@@ -116,7 +116,7 @@ if (isset($_GET['msg'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI House UHBC — Espace Étudiants</title>
+<title>AI House UHBC — Espace Members</title>
 <link rel="stylesheet" href="css/global.css"/>
 <link rel="stylesheet" href="css/dashboard.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -286,7 +286,7 @@ if (isset($_GET['msg'])) {
   </a>
   <div class="nav-search" id="nav-search-wrap">
     <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
-    <input type="text" id="student-search" placeholder="Rechercher un étudiant…" autocomplete="off"
+    <input type="text" id="student-search" placeholder="Rechercher un member…" autocomplete="off"
       oninput="handleSearch(this.value)" onfocus="openDropdown()" onblur="closeDropdownDelayed()">
     <button class="nav-search-clear" id="search-clear" onclick="clearSearch()">✕</button>
     <div class="search-dropdown" id="search-dropdown"></div>
@@ -314,7 +314,7 @@ if (isset($_GET['msg'])) {
 <div class="main-layout">
   <div class="feed-area">
     <div class="feed-header">
-      <div><div class="feed-title">Espace <span>Étudiants</span></div></div>
+      <div><div class="feed-title">Espace <span>Members</span></div></div>
       <button class="btn-create-project" onclick="openCreateProject()">
         <i class="fa-solid fa-plus"></i> Nouveau projet
       </button>
@@ -418,7 +418,7 @@ if (isset($_GET['msg'])) {
 
     <div class="s-card">
       <div class="s-card-head">
-        <div class="s-card-title">Top Étudiants</div>
+        <div class="s-card-title">Top Members</div>
         <span style="font-size:.7rem;color:var(--muted);font-weight:600">ce mois</span>
       </div>
       <div id="top-students-list" style="padding:6px 0"></div>
@@ -474,7 +474,7 @@ if (isset($_GET['msg'])) {
       </div>
       <div class="form-group" style="margin-top:18px">
         <div class="form-toggle-row">
-          <div><div class="form-toggle-label">Projet visible publiquement</div><div class="form-toggle-sub">Les autres étudiants peuvent voir votre projet.</div></div>
+          <div><div class="form-toggle-label">Projet visible publiquement</div><div class="form-toggle-sub">Les autres Members peuvent voir votre projet.</div></div>
           <label class="toggle-switch"><input type="checkbox" id="proj-visible" checked><span class="toggle-slider"></span></label>
         </div>
       </div>
@@ -489,7 +489,7 @@ if (isset($_GET['msg'])) {
 <div class="modal-overlay" id="sp-modal" onclick="if(event.target===this)closeStudentProfile()">
   <div class="sp-modal-box">
     <div class="sp-modal-head">
-      <div class="sp-modal-title"><i class="fa-solid fa-user" style="color:var(--green);margin-right:8px"></i>Profil étudiant</div>
+      <div class="sp-modal-title"><i class="fa-solid fa-user" style="color:var(--green);margin-right:8px"></i>Profil Member</div>
       <button class="modal-close" onclick="closeStudentProfile()">✕</button>
     </div>
     <div class="sp-modal-body">
@@ -551,7 +551,7 @@ if (isset($_GET['msg'])) {
     <button class="mob-search-back" onclick="closeMobileSearch()"><i class="fa-solid fa-arrow-left"></i></button>
     <div style="position:relative;flex:1">
       <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none"></i>
-      <input type="text" id="mob-search-input" placeholder="Rechercher un étudiant…" autocomplete="off"
+      <input type="text" id="mob-search-input" placeholder="Rechercher un Member…" autocomplete="off"
         oninput="handleMobSearch(this.value)" style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;background:var(--bg)">
     </div>
   </div>
@@ -652,7 +652,7 @@ function buildProjectCard(p,delay){
       <div class="pch-av">${avHtml}</div>
       <div class="pch-info">
         <div class="pch-name">${p.owner.firstname} ${p.owner.lastname}</div>
-        <div class="pch-meta"><span>${p.owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${timeAgo(p.created_at||new Date().toISOString())}</span></div>
+        <div class="pch-meta"><span>${p.owner.grade||'Admin'}</span><span class="pch-dot"></span><span>${timeAgo(p.created_at||new Date().toISOString())}</span></div>
       </div>
       <span class="pc-cat-badge ${catClass}">${catLabel}</span>
     </div>
@@ -818,7 +818,7 @@ function renderAnnouncements(){
   cont.innerHTML=[...ANNOUNCEMENTS].sort((a,b)=>(b.is_pinned?1:0)-(a.is_pinned?1:0)).map((a,i)=>{
     const av=a.author?.image?`<img src="${a.author.image}" alt="">`:getInitials(a.author?.firstname||'P',a.author?.lastname||'');
     const img=a.image?`<img src="${a.image}" class="ann-img lb-trigger" alt="" onclick="openLightbox(this.src,'${esc(a.title)}')">`:''
-    return`<div class="ann-card${a.is_pinned?' pinned':''}" style="animation-delay:${i*70}ms">${a.is_pinned?'<div class="ann-pin-bar"></div>':''}<div class="ann-header"><div class="ann-av">${av}</div><div class="ann-author-info"><div class="ann-author-name">${a.author?.firstname||''} ${a.author?.lastname||''}</div><div class="ann-author-meta"><span>Professeur</span><span class="pch-dot"></span><span>${timeAgo(a.created_at)}</span></div></div>${a.is_pinned?'<span class="ann-pin-badge"><i class="fa-solid fa-thumbtack"></i> Épinglée</span>':''}</div><div class="ann-body"><div class="ann-title">${a.title}</div><div class="ann-content">${a.content}</div>${img}</div></div>`;
+    return`<div class="ann-card${a.is_pinned?' pinned':''}" style="animation-delay:${i*70}ms">${a.is_pinned?'<div class="ann-pin-bar"></div>':''}<div class="ann-header"><div class="ann-av">${av}</div><div class="ann-author-info"><div class="ann-author-name">${a.author?.firstname||''} ${a.author?.lastname||''}</div><div class="ann-author-meta"><span>Admin</span><span class="pch-dot"></span><span>${timeAgo(a.created_at)}</span></div></div>${a.is_pinned?'<span class="ann-pin-badge"><i class="fa-solid fa-thumbtack"></i> Épinglée</span>':''}</div><div class="ann-body"><div class="ann-title">${a.title}</div><div class="ann-content">${a.content}</div>${img}</div></div>`;
   }).join('');
 }
 
@@ -852,7 +852,7 @@ function renderSidebarEvents(){
 
 let searchTimer=null,currentSearch='';
 function handleSearch(val){currentSearch=val.trim();document.getElementById('search-clear').style.display=currentSearch?'block':'none';if(!currentSearch){closeDropdown();return;}document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>Recherche…</div>`;document.getElementById('search-dropdown').classList.add('open');clearTimeout(searchTimer);searchTimer=setTimeout(()=>doSearch(currentSearch),350);}
-async function doSearch(q){try{const data=await _postAjax({_action:'search',name:q});const dd=document.getElementById('search-dropdown');if(!currentSearch)return;const results=data.results||[];if(!results.length){dd.innerHTML=`<div class="sd-empty">Aucun étudiant trouvé pour "<strong>${q}</strong>"</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);dd.innerHTML=`<div class="sd-section"><div class="sd-label">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onmousedown="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty">Erreur de connexion</div>`;}}
+async function doSearch(q){try{const data=await _postAjax({_action:'search',name:q});const dd=document.getElementById('search-dropdown');if(!currentSearch)return;const results=data.results||[];if(!results.length){dd.innerHTML=`<div class="sd-empty">Aucun Member trouvé pour "<strong>${q}</strong>"</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);dd.innerHTML=`<div class="sd-section"><div class="sd-label">Memberss (${results.length})</div>${results.map(s=>`<div class="sd-item" onmousedown="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Member</div></div></div>`).join('')}</div>`;}catch(e){document.getElementById('search-dropdown').innerHTML=`<div class="sd-empty">Erreur de connexion</div>`;}}
 function openDropdown(){if(currentSearch)document.getElementById('search-dropdown').classList.add('open');}
 function closeDropdown(){document.getElementById('search-dropdown').classList.remove('open');}
 function closeDropdownDelayed(){setTimeout(closeDropdown,200);}
@@ -860,7 +860,7 @@ function clearSearch(){document.getElementById('student-search').value='';curren
 function openMobileSearch(){document.getElementById('mob-search-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>document.getElementById('mob-search-input').focus(),100);}
 function closeMobileSearch(){document.getElementById('mob-search-overlay').classList.remove('open');document.getElementById('mob-search-input').value='';document.getElementById('mob-search-results').innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;document.body.style.overflow='';}
 let mobTimer=null;
-function handleMobSearch(val){const q=val.trim();const res=document.getElementById('mob-search-results');if(!q){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;return;}res.innerHTML=`<div class="sd-empty" style="padding:40px 20px"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i>Recherche…</div>`;clearTimeout(mobTimer);mobTimer=setTimeout(async()=>{try{const data=await _postAjax({_action:'search',name:q});const results=data.results||[];if(!results.length){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Aucun étudiant trouvé</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);res.innerHTML=`<div class="sd-section"><div class="sd-label" style="padding:12px 16px 6px">Étudiants (${results.length})</div>${results.map(s=>`<div class="sd-item" onclick="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div style="flex:1"><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Étudiant</div></div></div>`).join('')}</div>`;}catch(e){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Erreur de connexion</div>`;}},350);}
+function handleMobSearch(val){const q=val.trim();const res=document.getElementById('mob-search-results');if(!q){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Tapez un nom pour rechercher</div>`;return;}res.innerHTML=`<div class="sd-empty" style="padding:40px 20px"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i>Recherche…</div>`;clearTimeout(mobTimer);mobTimer=setTimeout(async()=>{try{const data=await _postAjax({_action:'search',name:q});const results=data.results||[];if(!results.length){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Aucun Member trouvé</div>`;return;}const hl=str=>str.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="sd-highlight">${m}</span>`);res.innerHTML=`<div class="sd-section"><div class="sd-label" style="padding:12px 16px 6px">Memberss (${results.length})</div>${results.map(s=>`<div class="sd-item" onclick="window.location.href='profile.php?id=${s.id}'"><div class="sd-av">${s.image?`<img src="${s.image}" alt="">`:getInitials(s.firstname,s.lastname)}</div><div style="flex:1"><div class="sd-name">${hl(s.firstname+' '+s.lastname)}</div><div class="sd-sub">Member</div></div></div>`).join('')}</div>`;}catch(e){res.innerHTML=`<div class="sd-empty" style="padding:40px 20px">Erreur de connexion</div>`;}},350);}
 
 
 function openCreateProject(){document.getElementById('create-project-modal').classList.add('open');document.body.style.overflow='hidden';}

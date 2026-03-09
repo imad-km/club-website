@@ -635,7 +635,7 @@ function pBuildCard(p, i){
       <div class="pch-av">${avHtml}</div>
       <div class="pch-info">
         <div class="pch-name">${owner.firstname} ${owner.lastname}</div>
-        <div class="pch-meta"><span>${owner.grade||'Étudiant'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
+        <div class="pch-meta"><span>${owner.grade||'Admin'}</span><span class="pch-dot"></span><span>${pTimeAgo(p.created_at||new Date().toISOString())}</span></div>
       </div>
       <span class="pc-cat-badge ${catClass}">${catLabel}</span>
       ${roleBadge}

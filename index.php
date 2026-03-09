@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'ai-assistant.php';
 $__logged = isset($_SESSION['access']) ? 'true' : 'false';
 ?>
 <html lang="en">
