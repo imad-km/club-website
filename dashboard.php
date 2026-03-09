@@ -244,6 +244,19 @@ if (isset($_GET['msg'])) {
 #photo-lightbox.lb-open #lb-caption{display:block;}
 .lb-trigger{cursor:zoom-in!important;}
 .tb-prof{background:#f3e8ff;color:#7c3aed;}
+.ff-cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.ff-sort-row{display:flex;gap:6px;flex-wrap:wrap;}
+.ff-sort-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:20px;
+  border:1.5px solid var(--border);background:var(--fog);
+  color:var(--muted);font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;font-weight:700;letter-spacing:.04em;
+  cursor:pointer;transition:.18s;
+}
+.ff-sort-btn i{font-size:.7rem;}
+.ff-sort-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-p);}
+.ff-sort-btn.active{background:var(--dark);color:#fff;border-color:var(--dark);}
 
 /* ─── DRAWER TRANSLATE BAR ─── */
 .drawer-translate-wrap{
@@ -321,13 +334,20 @@ if (isset($_GET['msg'])) {
     </div>
     <div class="tab-panel active" id="panel-projects">
       <div class="feed-filters" id="feed-filters" style="margin-bottom:16px">
-        <button class="ff-btn active" onclick="filterFeed(this,'all')">Tous</button>
-        <button class="ff-btn" onclick="filterFeed(this,'nlp')">NLP</button>
-        <button class="ff-btn" onclick="filterFeed(this,'vision')">Vision</button>
-        <button class="ff-btn" onclick="filterFeed(this,'data')">Data</button>
-        <button class="ff-btn" onclick="filterFeed(this,'rl')">RL</button>
-        <button class="ff-btn" onclick="filterFeed(this,'ml')">ML</button>
-        <button class="ff-btn" onclick="filterFeed(this,'other')">Autre</button>
+        <div class="ff-cat-row">
+          <button class="ff-btn active" onclick="filterFeed(this,'all')">Tous</button>
+          <button class="ff-btn" onclick="filterFeed(this,'nlp')">NLP</button>
+          <button class="ff-btn" onclick="filterFeed(this,'vision')">Vision</button>
+          <button class="ff-btn" onclick="filterFeed(this,'data')">Data</button>
+          <button class="ff-btn" onclick="filterFeed(this,'rl')">RL</button>
+          <button class="ff-btn" onclick="filterFeed(this,'ml')">ML</button>
+          <button class="ff-btn" onclick="filterFeed(this,'other')">Autre</button>
+        </div>
+        <div class="ff-sort-row">
+          <button class="ff-sort-btn active" onclick="sortFeed(this,'all')"><i class="fa-solid fa-border-all"></i> Tous</button>
+          <button class="ff-sort-btn" onclick="sortFeed(this,'likes')"><i class="fa-solid fa-heart"></i> Plus aimés</button>
+          <button class="ff-sort-btn" onclick="sortFeed(this,'comments')"><i class="fa-regular fa-comment"></i> Plus commentés</button>
+        </div>
       </div>
       <div id="feed-container"></div>
       <div class="load-more-wrap" id="load-more-wrap" style="display:none">
@@ -557,6 +577,7 @@ const EVENT_TYPE_CSS    = {workshop:'etype-workshop',conference:'etype-conferenc
 const EVENT_TYPE_ICONS  = {workshop:'fa-screwdriver-wrench',conference:'fa-microphone-lines',competition:'fa-trophy',seminar:'fa-chalkboard-user',other:'fa-calendar-days'};
 
 let currentFilter  = 'all';
+let currentSort    = 'all';
 let visibleCount   = 4;
 
 let joinedEventIds = new Set(EVENTS.filter(e => e.is_registered).map(e => e.id));
@@ -587,7 +608,12 @@ function switchTab(tab,btn){
 }
 
 
-function getFiltered(){return PROJECTS.filter(p=>currentFilter==='all'||p.category===currentFilter);}
+function getFiltered(){
+  let arr=PROJECTS.filter(p=>currentFilter==='all'||p.category===currentFilter);
+  if(currentSort==='likes')    arr=[...arr].sort((a,b)=>(b._like_count??b.like_count??0)-(a._like_count??a.like_count??0));
+  if(currentSort==='comments') arr=[...arr].sort((a,b)=>(b._comment_count??b.comment_count??0)-(a._comment_count??a.comment_count??0));
+  return arr;
+}
 function renderFeed(){
   const cont=document.getElementById('feed-container');
   const empty=document.getElementById('feed-empty');
@@ -602,6 +628,7 @@ function renderFeed(){
 function loadMore(){visibleCount+=4;renderFeed();}
 function filterFeed(btn,cat){currentFilter=cat;visibleCount=4;document.querySelectorAll('#feed-filters .ff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderFeed();}
 function filterByTag(pill,cat){currentFilter=cat;visibleCount=4;document.querySelectorAll('.tag-pill').forEach(t=>t.classList.remove('active'));pill.classList.add('active');renderFeed();}
+function sortFeed(btn,sort){currentSort=sort;visibleCount=4;document.querySelectorAll('.ff-sort-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderFeed();}
 function buildProjectCard(p,delay){
   const initials=getInitials(p.owner.firstname,p.owner.lastname);
   const catClass=CAT_CLASS[p.category]||'cat-other';
