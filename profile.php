@@ -404,7 +404,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
             <i class="fa-solid fa-shield-halved"></i> Admin
           </a>
         <?php endif; ?>
-        <button class="btn-logout-p" onclick="window.location.href='student_login.php?logout=1'">
+        <button class="btn-logout-p" onclick="window.location.href='logout.php'">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion
         </button>
       <?php else: ?>

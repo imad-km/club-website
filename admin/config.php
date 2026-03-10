@@ -1,6 +1,6 @@
 <?php
 define('AES_FINAL_KEY', hex2bin('c2f8a1d7e4b93051facd76e2184059bc1a7f3d8e5c2b4a9f6d1e3c7b8a0f2e4d'));
-define('DOK_WINDOW', 10);
+define('DOK_WINDOW', 300); // 5 minutes 
 
 function aes_decrypt_raw(string $enc): string|false {
     $raw = base64_decode($enc, true);
@@ -25,7 +25,9 @@ function aes_decrypt_str(string $enc): ?string {
 function verify_dok(string $dok): bool {
     $dec = aes_decrypt($dok);
     if (!$dec || !isset($dec['t'])) return false;
-    $diff = abs((microtime(true) * 1000) - (float)$dec['t']);
+    $server_ms = microtime(true) * 1000;
+    $client_ms = (float)$dec['t'];
+    $diff      = abs($server_ms - $client_ms);
     return $diff <= (DOK_WINDOW * 1000);
 }
 

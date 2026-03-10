@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
-if (!isset($_SESSION['access'])) { header('Location: login.php'); exit(); }
+if (!isset($_SESSION['access'])) { header('Location: ../index.php'); exit(); }
 
 define('_A', 'http://173.249.28.246:8090/api/v1');
 $tok = $_SESSION['access'];
@@ -522,6 +522,7 @@ td{padding:12px 18px;font-size:13px;color:var(--txt);}
 }
 @media(max-width:480px){.stats{grid-template-columns:1fr;}.cards-grid{grid-template-columns:1fr;}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 </head>
 <body>
 <div class="mob-ov" id="mobOv" onclick="sbClose()"></div>
@@ -994,8 +995,6 @@ td{padding:12px 18px;font-size:13px;color:var(--txt);}
   <input type="hidden" name="_act" value="del_event"/>
   <input type="hidden" name="id" id="delEvtId"/>
 </form>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
 <!-- ── BAN MODAL ── -->
 <div class="modal-bg hidden" id="banModal">
