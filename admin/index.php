@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['_act'] ?? '';
 
     if ($act === 'logout') {
-        session_destroy(); header('Location: login.php'); exit();
+    session_destroy(); header('Location: /index.php'); exit();
     }
 
     if ($act === 'upd') {
