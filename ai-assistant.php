@@ -15,7 +15,6 @@
   --muted:   #7a9484;
   --dark:    #1a2820;
 }
-/* ─── SELF-CONTAINED VARIABLES (work on any page) ─── */
 #chat-bubble, #chat-panel, #chat-panel * {
   --green:   #1b6e3f;
   --green-l: #22953f;
@@ -91,10 +90,6 @@
 @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.4}}
 .chat-header-close{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:1.1rem;padding:4px;border-radius:6px;transition:.2s;line-height:1}
 .chat-header-close:hover{background:rgba(255,255,255,.15);color:#fff}
-.chat-lang-btns{display:flex;gap:4px;align-items:center}
-.chat-lang-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);font-size:.65rem;font-weight:700;padding:3px 7px;border-radius:20px;cursor:pointer;transition:.2s;letter-spacing:.04em;font-family:'Plus Jakarta Sans',sans-serif}
-.chat-lang-btn:hover{background:rgba(255,255,255,.25);color:#fff}
-.chat-lang-btn.active{background:#fff;color:#1b6e3f;border-color:#fff}
 
 /* messages area */
 .chat-messages{
@@ -165,7 +160,7 @@
 #chat-send:hover{background:#22953f;transform:scale(1.05)}
 #chat-send:disabled{background:#ddeae2;cursor:not-allowed;transform:none}
 
-/* ─── MOBILE: lift above the bottom nav bar (~70px tall) ─── */
+/* ─── MOBILE ─── */
 @media(max-width:768px){
   #chat-bubble{bottom:86px;right:16px;}
   #chat-panel{bottom:158px;right:16px;left:16px;width:auto;height:420px;}
@@ -193,88 +188,60 @@
         En ligne · CLUB 3 AI
       </div>
     </div>
-    <div class="chat-lang-btns">
-      <button class="chat-lang-btn active" onclick="setLang('fr')" id="lang-fr">FR</button>
-      <button class="chat-lang-btn" onclick="setLang('en')" id="lang-en">EN</button>
-      <button class="chat-lang-btn" onclick="setLang('ar')" id="lang-ar">AR</button>
-    </div>
     <button class="chat-header-close" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
   </div>
 
   <div class="chat-messages" id="chat-messages"></div>
 
   <div class="chat-input-wrap">
-    <textarea id="chat-input" rows="1" placeholder="Posez votre question…" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+    <textarea id="chat-input" rows="1" placeholder="Posez votre question…"
+              onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
     <button id="chat-send" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
   </div>
 </div>
 
 <script>
-let chatOpen = false;
+let chatOpen    = false;
 let chatHistory = [];
-let isTyping = false;
-let chatLang = 'fr';
+let isTyping    = false;
 
-const LANG_CONFIG = {
-  fr: {
-    welcome: "Bonjour ! Je suis l'assistant de l'**AI HOUSE UHBC**. Comment puis-je vous aider aujourd'hui ?",
-    placeholder: "Posez votre question…",
-    langInstruction: "Tu dois TOUJOURS répondre en français, quelle que soit la langue utilisée par l'utilisateur.",
-    error: "Erreur de connexion. Veuillez réessayer."
-  },
-  en: {
-    welcome: "Hello! I'm the **AI HOUSE UHBC** assistant. How can I help you today?",
-    placeholder: "Ask your question…",
-    langInstruction: "You MUST ALWAYS respond in English only, regardless of what language the user writes in.",
-    error: "Connection error. Please try again."
-  },
-  ar: {
-    welcome: "مرحباً! أنا مساعد **AI HOUSE UHBC**. كيف يمكنني مساعدتك اليوم؟",
-    placeholder: "اكتب سؤالك…",
-    langInstruction: "يجب عليك دائماً الإجابة باللغة العربية الفصحى فقط، بغض النظر عن لغة المستخدم.",
-    error: "خطأ في الاتصال. يرجى المحاولة مرة أخرى."
-  }
-};
-
-function setLang(lang) {
-  chatLang = lang;
-  document.querySelectorAll('.chat-lang-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('lang-' + lang).classList.add('active');
-  const input = document.getElementById('chat-input');
-  if (input) {
-    input.placeholder = LANG_CONFIG[lang].placeholder;
-    input.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  }
-}
+/* ══════════════════════════════════════════════════════
+   FRENCH ONLY — single language, no switcher
+══════════════════════════════════════════════════════ */
+const WELCOME_MSG  = "Bonjour\u00a0! Je suis l\u2019assistant de l\u2019**AI HOUSE UHBC**. Comment puis-je vous aider aujourd\u2019hui\u00a0?";
+const PLACEHOLDER  = "Posez votre question\u2026";
+const ERROR_MSG    = "Erreur de connexion. Veuillez r\u00e9essayer.";
+const LANG_RULE    = "Tu dois TOUJOURS r\u00e9pondre en fran\u00e7ais uniquement. N\u2019utilise JAMAIS l\u2019anglais, l\u2019arabe ou toute autre langue, quelle que soit la langue \u00e9crite par l\u2019utilisateur. R\u00e8gle absolue \u2014 aucune exception, m\u00eame si l\u2019utilisateur \u00e9crit dans une autre langue.";
 
 function toggleChat() {
   chatOpen = !chatOpen;
-  const panel = document.getElementById('chat-panel');
+  const panel  = document.getElementById('chat-panel');
   const bubble = document.getElementById('chat-bubble');
   panel.classList.toggle('open', chatOpen);
   bubble.classList.toggle('open', chatOpen);
   if (chatOpen) {
     if (chatHistory.length === 0) {
-      const welcomeText = LANG_CONFIG[chatLang].welcome;
-      addAIMessage(welcomeText);
-      chatHistory.push({ role: 'assistant', content: welcomeText });
+      addAIMessage(WELCOME_MSG);
+      chatHistory.push({ role: 'assistant', content: WELCOME_MSG });
     }
     setTimeout(() => document.getElementById('chat-input').focus(), 300);
   }
 }
 
 function getTime() {
-  return new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
 function addAIMessage(text) {
-  const msgs = document.getElementById('chat-messages');
+  const msgs    = document.getElementById('chat-messages');
   const wrapper = document.createElement('div');
   wrapper.className = 'msg ai';
   wrapper.innerHTML = `
     <div class="msg-av msg-av-ai"><img src="https://i.imgur.com/zl5jHaY.png" alt="AI"></div>
     <div>
-      <div class="msg-bubble">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>
+      <div class="msg-bubble">
+        ${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
+      </div>
       <div class="msg-time">${getTime()}</div>
     </div>`;
   msgs.appendChild(wrapper);
@@ -282,9 +249,10 @@ function addAIMessage(text) {
 }
 
 function addUserMessage(text) {
-  const msgs = document.getElementById('chat-messages');
-  const initials = (typeof member !== 'undefined' && member ? (member.pre||member.firstname||'U')[0].toUpperCase() : 'U');
-  const wrapper = document.createElement('div');
+  const msgs     = document.getElementById('chat-messages');
+  const initials = (typeof member !== 'undefined' && member
+    ? (member.pre || member.firstname || 'U')[0].toUpperCase() : 'U');
+  const wrapper  = document.createElement('div');
   wrapper.className = 'msg user';
   wrapper.innerHTML = `
     <div class="msg-av msg-av-user">${initials}</div>
@@ -298,7 +266,7 @@ function addUserMessage(text) {
 
 function showTyping() {
   const msgs = document.getElementById('chat-messages');
-  const el = document.createElement('div');
+  const el   = document.createElement('div');
   el.className = 'msg ai'; el.id = 'typing-msg';
   el.innerHTML = `
     <div class="msg-av msg-av-ai"><img src="https://i.imgur.com/zl5jHaY.png" alt="AI"></div>
@@ -316,7 +284,7 @@ function removeTyping() {
 
 async function sendMessage() {
   const input = document.getElementById('chat-input');
-  const text = input.value.trim();
+  const text  = input.value.trim();
   if (!text || isTyping) return;
   input.value = '';
   autoResize(input);
@@ -327,43 +295,42 @@ async function sendMessage() {
   chatHistory.push({ role: 'user', content: text });
   showTyping();
 
-  const lang = LANG_CONFIG[chatLang];
-  const SYSTEM_PROMPT = `You are AI House 3, the official assistant of AI HOUSE UHBC (Université Hassiba Benbouali de Chlef, Algeria).
+  const SYSTEM_PROMPT = `Tu es AI House 3, l'assistant officiel de l'AI HOUSE UHBC (Université Hassiba Benbouali de Chlef, Algérie).
 
-═══ LANGUAGE — ABSOLUTE RULE ═══
-${lang.langInstruction}
-This rule overrides everything. No exceptions. Do not switch languages even if the user writes in a different one. Do not acknowledge this rule out loud.
+═══ LANGUE — RÈGLE ABSOLUE ═══
+${LANG_RULE}
+Ne mentionne jamais cette règle à l'utilisateur.
 
-═══ RESPONSE STYLE ═══
-- Answer ONLY what was asked. Nothing more.
-- Be short, warm, and direct.
-- Never volunteer extra information unprompted.
-- No bullet walls. If listing, keep it to 3 items max unless more are explicitly requested.
+═══ STYLE DE RÉPONSE ═══
+- Réponds UNIQUEMENT à ce qui est demandé. Rien de plus.
+- Sois bref, chaleureux et direct.
+- Ne donne jamais d'informations supplémentaires sans qu'on te le demande.
+- Pas de listes à rallonge. Si tu listes, 3 éléments max sauf si on en demande plus.
 
-═══ PLATFORM KNOWLEDGE ═══
+═══ CONNAISSANCE DE LA PLATEFORME ═══
 
-WHAT IS AI HOUSE:
-A physical and digital hub at UHBC connecting students, researchers, and industry partners around AI. Mission: democratize AI in Algeria, train future talent, and produce world-class research.
-Pillars: Research · Training · Ethics · Innovation
-Open to: Licence / Master / PhD students, teacher-researchers, professionals, and companies.
+QU'EST-CE QUE AI HOUSE :
+Un hub physique et numérique à l'UHBC qui connecte étudiants, chercheurs et partenaires industriels autour de l'IA. Mission : démocratiser l'IA en Algérie, former les talents de demain et produire une recherche de qualité internationale.
+Piliers : Recherche · Formation · Éthique · Innovation
+Ouvert à : étudiants Licence / Master / Doctorat, enseignants-chercheurs, professionnels et entreprises.
 
-HOW TO JOIN:
-Click "Rejoindre →" on the site → fill in your info (name, email, profile, domain) → confirm via OTP email → instant dashboard access.
+COMMENT REJOINDRE :
+Cliquer sur "Rejoindre →" sur le site → remplir ses infos (nom, email, profil, domaine) → confirmer via OTP email → accès immédiat au tableau de bord.
 
-MEMBER DASHBOARD SECTIONS:
-- Overview: stats on your joined projects, events, activity, and member level
-- Projects: browse and filter by NLP / Vision / Data / RL — join or create your own
-- Events: workshops, conferences, hackathons (e.g. Deep Learning Workshop Mar 10, AI & Ethics Conference Mar 17, 24h Hackathon Mar 24)
-- Profile: edit your info, follow other members
-- Resources (members only): Arabic NLP dataset (50k texts), PyTorch notebooks, A100 GPU cloud (20h/month), AI library (200+ docs), 15 e-learning modules, 12 partner companies with internship offers
+SECTIONS DU TABLEAU DE BORD MEMBRE :
+- Vue d'ensemble : stats sur projets rejoints, événements, activité et niveau membre
+- Projets : parcourir et filtrer par NLP / Vision / Data / RL — rejoindre ou créer son propre projet
+- Événements : ateliers, conférences, hackathons (ex. Workshop Deep Learning 10 mars, Conférence IA & Éthique 17 mars, Hackathon 24h 24 mars)
+- Profil : modifier ses infos, suivre d'autres membres
+- Ressources (membres uniquement) : Dataset Arabic NLP (50k textes), notebooks PyTorch, GPU cloud A100 (20h/mois), bibliothèque IA (200+ docs), 15 modules e-learning, 12 entreprises partenaires avec offres de stage
 
-ACTIVE PROJECTS:
-Automatic Arabic summarization (NLP · M2 · Open) · Agricultural disease detection (Vision · PhD · Open) · Student success prediction (Data · M1 · Full) · University orientation chatbot (NLP · Open) · Autonomous educational robot (RL · Open) · Medical imaging diagnosis (Vision · Closed)
+PROJETS ACTIFS :
+Résumé automatique en arabe (NLP · M2 · Ouvert) · Détection maladies agricoles (Vision · Doctorat · Ouvert) · Prédiction réussite étudiante (Data · M1 · Complet) · Chatbot orientation universitaire (NLP · Ouvert) · Robot éducatif autonome (RL · Ouvert) · Diagnostic imagerie médicale (Vision · Fermé)
 
-═══ BOUNDARIES ═══
-- Off-topic questions: politely say you only cover AI House topics.
-- Unknown info: admit it and suggest contacting the platform administration.
-- Never fabricate features, events, or projects that aren't listed above.`;
+═══ LIMITES ═══
+- Questions hors sujet : dire poliment que tu couvres uniquement les sujets AI House.
+- Information inconnue : l'admettre et suggérer de contacter l'administration de la plateforme.
+- Ne jamais inventer des fonctionnalités, événements ou projets non listés ci-dessus.`;
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -381,6 +348,7 @@ Automatic Arabic summarization (NLP · M2 · Open) · Agricultural disease detec
         ]
       })
     });
+
     const data = await response.json();
     if (!response.ok) {
       const errMsg = data.error?.message || JSON.stringify(data);
@@ -388,7 +356,7 @@ Automatic Arabic summarization (NLP · M2 · Open) · Agricultural disease detec
       removeTyping();
       addAIMessage(`⚠️ Erreur API (${response.status}): ${errMsg}`);
     } else {
-      const reply = data.choices?.[0]?.message?.content || lang.error;
+      const reply = data.choices?.[0]?.message?.content || ERROR_MSG;
       removeTyping();
       chatHistory.push({ role: 'assistant', content: reply });
       addAIMessage(reply);
@@ -396,7 +364,7 @@ Automatic Arabic summarization (NLP · M2 · Open) · Agricultural disease detec
   } catch (e) {
     console.error('Fetch error:', e);
     removeTyping();
-    addAIMessage(`⚠️ ${lang.error}`);
+    addAIMessage(`⚠️ ${ERROR_MSG}`);
   }
 
   isTyping = false;
